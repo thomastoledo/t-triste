@@ -18,5 +18,15 @@ Un puzzle game compétitif (`BATTLE ROYALE?` NON).
 * Fast compile:
   * Rust nightly
   * LLD (ZLD for Macos)
-* Utilisation d'une version récente de bevy (> 0.4) 
+* Utilisation d'une version récente de bevy (> 0.4)
 * Asset de pièce de jeu
+
+### Réalisation
+* On a fait bouger un rectangle bleu ...
+* On a séparé le code pour qu'il soit plus propre ...  
+* On a écrit un test (qui ne s'execute pas (encore)) ...
+
+## Stream 3
+### Interstream
+* Transformer en lib + bin pour pouvoir jouer les doc tests
+* Asset de plateau de jeu ?
