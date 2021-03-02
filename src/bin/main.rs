@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-mod piece;
+use t_triste::*;
 
 // Start function
 fn main() {

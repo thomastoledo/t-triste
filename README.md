@@ -1,6 +1,7 @@
 # t-triste
 
 Un puzzle game compétitif (`BATTLE ROYALE?` NON).
+Pour lancer le jeu: `cargo run --features bevy/dynamic` (la feature est optionnelle)
 
 ## Stream 1
 ### Réalisation
@@ -28,5 +29,10 @@ Un puzzle game compétitif (`BATTLE ROYALE?` NON).
 
 ## Stream 3
 ### Interstream
-* Transformer en lib + bin pour pouvoir jouer les doc tests
+* Transformer en lib + bin pour pouvoir jouer les tests
 * Asset de plateau de jeu ?
+
+## Plan
+* Dessiner le plateau de jeu
+* Faire bouger une pièce d'un point A -> B
+* Commencer le placement de pièce dans le jeu

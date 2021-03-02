@@ -1,5 +1,5 @@
 use std::f32::consts::FRAC_PI_2;
-use std::f32::consts::FRAC_2_PI;
+use std::f32::consts::PI;
 use bevy::prelude::*;
 
 // Plugins
@@ -20,26 +20,10 @@ struct Piece {
 }
 
 impl Piece {
-
-    // TODO: This does not run because we are using a bin deployment (not a lib). Split in two
-    /// Rotate a piece by 90° in radians
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// let mut piece = Piece::default();
-    /// piece.rotate_piece();
-    /// assert_eq!(piece.rotation, FRAC_PI_2);
-    /// piece.rotate_piece();
-    /// assert_eq!(piece.rotation, FRAC_1_PI);
-    /// piece.rotate_piece();
-    /// assert_eq!(piece.rotation, FRAC_1_PI + FRAC_PI_2);
-    /// piece.rotate_piece();
-    /// assert_eq!(piece.rotation, 0.0);
-    /// ```
+    // Rotate a piece by 90° in radians
     fn rotate_piece(&mut self) {
         let next_rad = self.rotation + FRAC_PI_2;
-        if next_rad == FRAC_2_PI {
+        if next_rad == (2.0 * PI) {
             self.rotation = 0.0;
         } else {
             self.rotation = next_rad;
@@ -73,4 +57,25 @@ fn spawn_piece(
             material: materials.add(texture_handle.into()),
             ..Default::default()
         }).with(Piece::default());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rotate() {
+        use std::f32::consts::PI;
+        use std::f32::consts::FRAC_PI_2;
+
+        let mut piece = Piece::default();
+        piece.rotate_piece();
+        assert_eq!(piece.rotation, FRAC_PI_2);
+        piece.rotate_piece();
+        assert_eq!(piece.rotation, PI);
+        piece.rotate_piece();
+        assert_eq!(piece.rotation, 3.0 * FRAC_PI_2);
+        piece.rotate_piece();
+        assert_eq!(piece.rotation, 0.0);
+    }
 }

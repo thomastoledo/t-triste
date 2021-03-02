@@ -3,7 +3,7 @@ name = "t-triste"
 version = "0.1.0"
 authors = [
     "ImFlog <garcia.florian.perso@gmail.com>",
-    "NugetChar <>"
+    "NugetChar <nugetchar@gmail.com>"
 ]
 edition = "2018"
 
