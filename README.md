@@ -1,38 +1,13 @@
-# t-triste
+# T-triste :cry:
 
-Un puzzle game compétitif (`BATTLE ROYALE?` NON).
-Pour lancer le jeu: `cargo run --features bevy/dynamic` (la feature est optionnelle)
+## NOTRE PROJET
 
-## Stream 1
-### Réalisation
-* Présentation du projet
-* On a testé [Bevy](https://github.com/bevyengine/bevy)
-    * hello world
-    * prise en main des components
-    * prise en main des systems
-    * prise en main des plugins
-    * prise en main de nos vies
-    * prise en main du saumon
+Un puzzle game compétitif (BATTLE ROYALE ? NON). Pour lancer le jeu: `cargo run --features bevy/dynamic` (la feature est
+optionnelle)
 
-## Stream 2
-### Interstream
-* Fast compile:
-  * Rust nightly
-  * LLD (ZLD for Macos)
-* Utilisation d'une version récente de bevy (> 0.4)
-* Asset de pièce de jeu
+## Résumé des streams
 
-### Réalisation
-* On a fait bouger un rectangle bleu ...
-* On a séparé le code pour qu'il soit plus propre ...  
-* On a écrit un test (qui ne s'execute pas (encore)) ...
-
-## Stream 3
-### Interstream
-* Transformer en lib + bin pour pouvoir jouer les tests
-* Asset de plateau de jeu ?
-
-## Plan
-* Dessiner le plateau de jeu
-* Faire bouger une pièce d'un point A -> B
-* Commencer le placement de pièce dans le jeu
+* [stream_1](readmes/stream_1.md)
+* [stream_2](readmes/stream_2.md)
+* [stream_3](readmes/stream_3.md)
+* next => [stream_4](readmes/stream_4.md)

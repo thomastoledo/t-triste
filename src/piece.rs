@@ -1,5 +1,7 @@
 use std::f32::consts::FRAC_PI_2;
 use std::f32::consts::PI;
+
+use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
 
 // Plugins
@@ -9,7 +11,8 @@ impl Plugin for PiecePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app
             .add_startup_system(spawn_piece.system())
-            .add_system(mouse_click_system.system());
+            .add_system(mouse_click_system.system())
+            .add_system(mouse_move_system.system());
     }
 }
 
@@ -17,6 +20,9 @@ impl Plugin for PiecePlugin {
 #[derive(Default)]
 struct Piece {
     rotation: f32,
+    x: f32,
+    y: f32,
+    moving: bool,
 }
 
 impl Piece {
@@ -39,8 +45,39 @@ fn mouse_click_system(
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
         for (mut piece, mut transform) in query.iter_mut() {
+            piece.moving = true
+        }
+    }
+    if mouse_button_input.just_released(MouseButton::Left) {
+        for (mut piece, mut transform) in query.iter_mut() {
+            piece.moving = false
+        }
+    }
+    if mouse_button_input.just_pressed(MouseButton::Right) {
+        for (mut piece, mut transform) in query.iter_mut() {
             piece.rotate_piece();
             transform.rotation = Quat::from_rotation_z(piece.rotation);
+        }
+    }
+}
+
+fn mouse_move_system(
+    mut cursor_moved_event: EventReader<CursorMoved>,
+    // mut mouse_motion_events: EventReader<MouseMotion>,
+    // See if we attach a Moving component in the piece for the query to avoid double loop
+    mut query: Query<(&Piece, &mut Transform)>,
+) {
+    for (piece, mut transform) in query.iter_mut() {
+        if piece.moving {
+            for event in cursor_moved_event.iter() {
+                // This also works
+                // let (x, y) = <(f32, f32)>::from(event.position);
+                let event_position = (*event.position);
+                let x = event_position.x;
+                let y = event_position.y;
+                println!("X = {}, Y = {}", x, y);
+                *transform = Transform::from_xyz(x, y, 1.0);
+            }
         }
     }
 }
@@ -55,6 +92,7 @@ fn spawn_piece(
         .spawn(OrthographicCameraBundle::new_2d())
         .spawn(SpriteBundle {
             material: materials.add(texture_handle.into()),
+            transform: Transform::from_xyz(0.0, 0.0, 1.0),
             ..Default::default()
         }).with(Piece::default());
 }
