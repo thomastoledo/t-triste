@@ -3,6 +3,8 @@ use std::f32::consts::PI;
 
 use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
+use bevy::render::camera::{Camera, DepthCalculation, OrthographicProjection, WindowOrigin};
+use bevy::render::render_graph::base;
 
 // Plugins
 pub struct PiecePlugin;
@@ -89,10 +91,9 @@ fn spawn_piece(
 ) {
     let texture_handle = asset_server.load("rectangle.png");
     commands
-        .spawn(OrthographicCameraBundle::new_2d())
         .spawn(SpriteBundle {
             material: materials.add(texture_handle.into()),
-            transform: Transform::from_xyz(0.0, 0.0, 1.0),
+            transform: Transform::from_xyz(400.0, 300.0, 1.0),
             ..Default::default()
         }).with(Piece::default());
 }
