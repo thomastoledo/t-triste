@@ -1,10 +1,7 @@
 use std::f32::consts::FRAC_PI_2;
 use std::f32::consts::PI;
 
-use bevy::input::mouse::MouseMotion;
 use bevy::prelude::*;
-use bevy::render::camera::{Camera, DepthCalculation, OrthographicProjection, WindowOrigin};
-use bevy::render::render_graph::base;
 
 // Plugins
 pub struct PiecePlugin;
@@ -46,12 +43,12 @@ fn mouse_click_system(
     mut query: Query<(&mut Piece, &mut Transform)>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (mut piece, mut transform) in query.iter_mut() {
+        for (mut piece, _) in query.iter_mut() {
             piece.moving = true
         }
     }
     if mouse_button_input.just_released(MouseButton::Left) {
-        for (mut piece, mut transform) in query.iter_mut() {
+        for (mut piece, _) in query.iter_mut() {
             piece.moving = false
         }
     }
@@ -67,17 +64,19 @@ fn mouse_move_system(
     mut cursor_moved_event: EventReader<CursorMoved>,
     // mut mouse_motion_events: EventReader<MouseMotion>,
     // See if we attach a Moving component in the piece for the query to avoid double loop
-    mut query: Query<(&Piece, &mut Transform)>,
+    mut query: Query<(&mut Piece, &mut Transform)>,
 ) {
-    for (piece, mut transform) in query.iter_mut() {
+    for (mut piece, mut transform) in query.iter_mut() {
         if piece.moving {
             for event in cursor_moved_event.iter() {
                 // This also works
                 // let (x, y) = <(f32, f32)>::from(event.position);
-                let event_position = (*event.position);
+                let event_position = *event.position;
                 let x = event_position.x;
                 let y = event_position.y;
-                println!("X = {}, Y = {}", x, y);
+                // This is probably useless for now
+                piece.x = x;
+                piece.y = y;
                 *transform = Transform::from_xyz(x, y, 1.0);
             }
         }
@@ -89,13 +88,19 @@ fn spawn_piece(
     mut materials: ResMut<Assets<ColorMaterial>>,
     commands: &mut Commands,
 ) {
+    let piece = Piece {
+        moving: false,
+        rotation: 0.,
+        x: 400.,
+        y: 300.
+    };
     let texture_handle = asset_server.load("rectangle.png");
     commands
         .spawn(SpriteBundle {
             material: materials.add(texture_handle.into()),
-            transform: Transform::from_xyz(400.0, 300.0, 1.0),
+            transform: Transform::from_xyz(piece.x, piece.y, 1.0),
             ..Default::default()
-        }).with(Piece::default());
+        }).with(piece);
 }
 
 #[cfg(test)]
