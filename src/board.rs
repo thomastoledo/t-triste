@@ -18,22 +18,23 @@ impl Plugin for BoardPlugin {
 // * * * *
 // * * * *
 // * * * *
-struct Board {}
+struct Board;
+
+struct Materials {
+    board_material: Handle<ColorMaterial>,
+}
 
 // Systems
 fn spawn_board(
-    asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     commands: &mut Commands,
 ) {
-    let texture_handle = asset_server.load("square.png");
-    let material = materials.add(texture_handle.into());
+    let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
 
-    // TODO: Proper builder ?
-    let mut shape = Shape::new();
-    shape.new_horizontal_rectangle(400, 300, 5);
-    shape.new_horizontal_rectangle(400, 350, 5);
-    shape.new_horizontal_rectangle(400, 400, 5);
+    let mut shape = Shape::new()
+        .new_horizontal_rectangle(300, 250, 5)
+        .new_horizontal_rectangle(300, 300, 5)
+        .new_horizontal_rectangle(300, 350, 5);
 
     let board = Board {};
 
@@ -41,6 +42,7 @@ fn spawn_board(
         commands.spawn(
             SpriteBundle {
                 material: material.clone(),
+                sprite: Sprite::new(Vec2::new(49.0, 49.0)), // 50px -1 to add border
                 transform: Transform::from_translation(square.to_vec()),
                 ..Default::default()
             }
@@ -48,6 +50,6 @@ fn spawn_board(
     }
 
     commands
-            .with(board)
-            .with(shape);
+        .with(board)
+        .with(shape);
 }

@@ -18,6 +18,7 @@ impl Plugin for GamePlugin {
                 vsync: true,
                 ..Default::default()
             })
+            .insert_resource(ClearColor(Color::rgb(1., 0.90, 1.)))
             .add_plugins(DefaultPlugins)
             .add_startup_system(setup_camera.system())
             .add_plugin(piece::PiecePlugin)

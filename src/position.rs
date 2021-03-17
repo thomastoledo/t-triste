@@ -27,7 +27,7 @@ impl Shape {
         }
     }
 
-    pub fn new_horizontal_rectangle(&mut self, start_x: i32, start_y: i32, length: i32) -> &mut Self {
+    pub fn new_horizontal_rectangle(mut self, start_x: i32, start_y: i32, length: i32) -> Self {
         for i in 0..length {
             self.squares.push(Position {
                 x: start_x + (i * SQUARE_WIDTH),
@@ -37,7 +37,7 @@ impl Shape {
         self
     }
 
-    pub fn new_vertical_rectangle(&mut self, start_x: i32, start_y: i32, length: i32) -> &mut Self {
+    pub fn new_vertical_rectangle(mut self, start_x: i32, start_y: i32, length: i32) -> Self {
         for i in 0..length {
             self.squares.push(Position {
                 x: start_x,
