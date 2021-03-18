@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::position::Shape;
+use crate::position::{ShapeBuilder};
 
 // Plugins
 pub struct BoardPlugin;
@@ -20,10 +20,6 @@ impl Plugin for BoardPlugin {
 // * * * *
 struct Board;
 
-struct Materials {
-    board_material: Handle<ColorMaterial>,
-}
-
 // Systems
 fn spawn_board(
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -31,10 +27,7 @@ fn spawn_board(
 ) {
     let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
 
-    let mut shape = Shape::new()
-        .new_horizontal_rectangle(300, 250, 5)
-        .new_horizontal_rectangle(300, 300, 5)
-        .new_horizontal_rectangle(300, 350, 5);
+    let shape = ShapeBuilder::new_board(300, 250, 5, 3);
 
     let board = Board {};
 

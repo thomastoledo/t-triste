@@ -1,5 +1,7 @@
 # Stream 3
 
+[L'enregistrement du live](https://www.youtube.com/watch?v=hYtIbICJtJ4&list=PLyEcLxim6vkJLZYz7liB58HppFR1ASUmf&index=2) 
+
 ## Interstream
 
 * Transformer en lib + bin pour pouvoir jouer les tests

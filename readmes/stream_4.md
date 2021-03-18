@@ -1,4 +1,7 @@
 # Stream 4
+
+[L'enregistrement du live](https://www.youtube.com/watch?v=hYtIbICJtJ4&list=PLyEcLxim6vkJLZYz7liB58HppFR1ASUmf&index=3)
+
 ## Interstream
 * Corriger le problème de repère
 * Faire bouger la pièce là où on a cliqué

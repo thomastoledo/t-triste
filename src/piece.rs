@@ -2,6 +2,8 @@ use std::f32::consts::FRAC_PI_2;
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
+use bevy::math::Vec3;
+use crate::position::{SQUARE_WIDTH, ShapeBuilder, Shape};
 
 // Plugins
 pub struct PiecePlugin;
@@ -16,11 +18,9 @@ impl Plugin for PiecePlugin {
 }
 
 // Components
-#[derive(Default)]
+#[derive(Default, Debug)]
 struct Piece {
     rotation: f32,
-    x: f32,
-    y: f32,
     moving: bool,
 }
 
@@ -62,11 +62,14 @@ fn mouse_click_system(
 
 fn mouse_move_system(
     mut cursor_moved_event: EventReader<CursorMoved>,
-    // mut mouse_motion_events: EventReader<MouseMotion>,
     // See if we attach a Moving component in the piece for the query to avoid double loop
-    mut query: Query<(&mut Piece, &mut Transform)>,
+    mut query: Query<(&Piece, &mut Shape, &mut Transform)>,
 ) {
-    for (mut piece, mut transform) in query.iter_mut() {
+    for (piece, mut shape, mut transform) in query.iter_mut() {
+        // For debug only
+        // println!("piece = {:?}", piece);
+        // println!("shape = {:?}", shape);
+        // println!("transform = {:?}", transform);
         if piece.moving {
             for event in cursor_moved_event.iter() {
                 // This also works
@@ -75,32 +78,43 @@ fn mouse_move_system(
                 let x = event_position.x;
                 let y = event_position.y;
                 // This is probably useless for now
-                piece.x = x;
-                piece.y = y;
-                *transform = Transform::from_xyz(x, y, 1.0);
+                // shape.change_origin(x as i32, y as i32);
+                // TODO: Only the last square inserted for the piece is moving
+                *transform = Transform::from_translation(Vec3::new(x, y, 1.0));
             }
         }
     }
 }
 
 fn spawn_piece(
-    asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     commands: &mut Commands,
 ) {
+    // TODO: Use a position struct
+    // let position = Position()
+
     let piece = Piece {
         moving: false,
         rotation: 0.,
-        x: 400.,
-        y: 300.
     };
-    let texture_handle = asset_server.load("rectangle.png");
+
+    let shape = ShapeBuilder::new_rectangle_piece(200, 200);
+
+    let materials = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
+
+    for square in &shape.squares {
+        commands.spawn(
+            SpriteBundle {
+                material: materials.clone(),
+                sprite: Sprite::new(Vec2::new(SQUARE_WIDTH as f32, SQUARE_WIDTH as f32)),
+                transform: Transform::from_translation(square.to_vec()),
+                ..Default::default()
+            }
+        );
+    };
     commands
-        .spawn(SpriteBundle {
-            material: materials.add(texture_handle.into()),
-            transform: Transform::from_xyz(piece.x, piece.y, 1.0),
-            ..Default::default()
-        }).with(piece);
+        .with(shape)
+        .with(piece);
 }
 
 #[cfg(test)]
