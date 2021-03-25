@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::position::{ShapeBuilder};
+use crate::position::{ShapeBuilder, Shape, Position};
 
 // Plugins
 pub struct BoardPlugin;
@@ -8,7 +8,8 @@ pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app
-            .add_startup_system(spawn_board.system());
+            .add_startup_system(spawn_board.system())
+            .add_system(test_query.system());
     }
 }
 
@@ -27,22 +28,23 @@ fn spawn_board(
 ) {
     let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
 
-    let shape = ShapeBuilder::new_board(300, 250, 5, 3);
+    ShapeBuilder::new_board(commands, material, 300, 250, 5, 3);
 
     let board = Board {};
 
-    for square in &shape.squares {
-        commands.spawn(
-            SpriteBundle {
-                material: material.clone(),
-                sprite: Sprite::new(Vec2::new(49.0, 49.0)), // 50px -1 to add border
-                transform: Transform::from_translation(square.to_vec()),
-                ..Default::default()
-            }
-        );
-    }
+    commands.with(board);
+}
 
-    commands
-        .with(board)
-        .with(shape);
+// TODO: Remove this, this is used for test only
+fn test_query(
+    query: Query<&Shape>,
+    positions: Query<&Position>
+) {
+    for shape in query.iter() {
+        let res = shape.entities
+            .iter()
+            .map(|e| *positions.get(*e).unwrap())
+            .collect::<Vec<Position>>();
+        println!("{:?}", res);
+    }
 }

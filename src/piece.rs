@@ -98,23 +98,8 @@ fn spawn_piece(
         rotation: 0.,
     };
 
-    let shape = ShapeBuilder::new_rectangle_piece(200, 200);
-
     let materials = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-
-    for square in &shape.squares {
-        commands.spawn(
-            SpriteBundle {
-                material: materials.clone(),
-                sprite: Sprite::new(Vec2::new(SQUARE_WIDTH as f32, SQUARE_WIDTH as f32)),
-                transform: Transform::from_translation(square.to_vec()),
-                ..Default::default()
-            }
-        );
-    };
-    commands
-        .with(shape)
-        .with(piece);
+    ShapeBuilder::new_rectangle_piece(commands, materials, 200, 200);
 }
 
 #[cfg(test)]

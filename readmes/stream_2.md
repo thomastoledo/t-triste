@@ -2,7 +2,7 @@
 
 [L'enregistrement du live](https://www.youtube.com/watch?v=6IRJJ_FLaHo&list=PLyEcLxim6vkJLZYz7liB58HppFR1ASUmf&index=1)
 
-## Interstream
+## InterStream
 
 * Fast compile:
     * Rust nightly
