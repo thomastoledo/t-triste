@@ -4,6 +4,7 @@ use bevy::render::camera::WindowOrigin;
 mod piece;
 mod board;
 mod position;
+mod shape;
 
 // Plugin
 pub struct GamePlugin;

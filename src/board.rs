@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
-use crate::position::{ShapeBuilder, Shape, Position};
+use crate::shape::{Shape, ShapeBuilder};
+use crate::position::Position;
 
 // Plugins
 pub struct BoardPlugin;

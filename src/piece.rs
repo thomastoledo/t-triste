@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 use bevy::math::Vec3;
-use crate::position::{SQUARE_WIDTH, ShapeBuilder, Shape};
+use crate::shape::{Shape, ShapeBuilder};
 
 // Plugins
 pub struct PiecePlugin;
