@@ -8,16 +8,7 @@ pub struct Shape {
     pub entities: Vec<Entity>
 }
 
-impl Shape {
-    // pub fn change_origin(&mut self, new_x: i32, new_y: i32) {
-    //     let mut i = 0;
-    //     for mut square in &mut self.entities {
-    //         square.x = new_x + (i * SQUARE_WIDTH);
-    //         square.y = new_y + (i * SQUARE_WIDTH);
-    //         i = i + 1;
-    //     }
-    // }
-}
+impl Shape {}
 
 pub struct ShapeBuilder {
     pub positions: Vec<Position>
@@ -306,37 +297,4 @@ mod tests {
         let results = world.query::<&Position>().collect::<Vec<_>>();
         assert_eq!(results, vec![&Position { x: 0, y: 0 }]);
     }
-
-    // #[test]
-    // fn test_change_shape_origin() {
-    //     // Given
-    //     let (world, mut commands, materials) = setup_world();
-    //
-    //     // When
-    //     // * * x
-    //     // x * *
-    //     ShapeBuilder::new_z_piece(&mut commands, materials, 0, 0);
-    //
-    //     let results = world.query::<&Position>().collect::<Vec<_>>();
-    //     assert_eq!(results, vec![
-    //         &Position { x: 0, y: SQUARE_WIDTH },
-    //         &Position { x: SQUARE_WIDTH, y: SQUARE_WIDTH },
-    //         &Position { x: SQUARE_WIDTH, y: 0 },
-    //         &Position { x: 2 * SQUARE_WIDTH, y: 0 }
-    //     ]);
-    //
-    //     // x * *
-    //     // x x * *
-    //     let new_x: i32 = 200;
-    //     let new_y: i32 = 230;
-    //     shape.change_origin(200, 230);
-    //
-    //     let results = world.query::<&Position>().collect::<Vec<_>>();
-    //     assert_eq!(results, vec![
-    //         Position { x: new_x, y: new_y + SQUARE_WIDTH },
-    //         Position { x: new_x + SQUARE_WIDTH, y: new_y + SQUARE_WIDTH },
-    //         Position { x: new_x + SQUARE_WIDTH, y: new_y },
-    //         Position { x: new_x + (2 * SQUARE_WIDTH), y: new_y }
-    //     ]);
-    // }
 }

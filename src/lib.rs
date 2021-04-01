@@ -5,6 +5,7 @@ mod piece;
 mod board;
 mod position;
 mod shape;
+mod cursor;
 
 // Plugin
 pub struct GamePlugin;
@@ -22,6 +23,7 @@ impl Plugin for GamePlugin {
             .insert_resource(ClearColor(Color::rgb(1., 0.90, 1.)))
             .add_plugins(DefaultPlugins)
             .add_startup_system(setup_camera.system())
+            .add_plugin(cursor::CursorPlugin)
             .add_plugin(piece::PiecePlugin)
             .add_plugin(board::BoardPlugin);
     }

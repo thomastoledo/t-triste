@@ -1,10 +1,10 @@
-# Stream 7
+# Stream 8
 
 ## InterStream
-* Fixer les tests sur les shapes
+* Ajouter le with Piece dans le builder de shape
+* Initializer sur les tests
 
 ## Plan
-* Déplacement d'une pièce avec la nouvelle structure
 * Déplacement si clic sur l'élément (pas n'importe où)
 * Affichage de multiples pièces
 

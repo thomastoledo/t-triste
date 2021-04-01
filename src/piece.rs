@@ -2,7 +2,9 @@ use std::f32::consts::FRAC_PI_2;
 use std::f32::consts::PI;
 
 use bevy::prelude::*;
-use bevy::math::Vec3;
+
+use crate::cursor::Cursor;
+use crate::position::Position;
 use crate::shape::{Shape, ShapeBuilder};
 
 // Plugins
@@ -61,26 +63,30 @@ fn mouse_click_system(
 }
 
 fn mouse_move_system(
-    mut cursor_moved_event: EventReader<CursorMoved>,
+    cursor: Res<Cursor>,
     // See if we attach a Moving component in the piece for the query to avoid double loop
-    mut query: Query<(&Piece, &mut Shape, &mut Transform)>,
+    shapes: Query<&Shape, With<Piece>>,
+    mut positions: Query<(&mut Position, &mut Transform)>,
 ) {
-    for (piece, mut shape, mut transform) in query.iter_mut() {
-        // For debug only
-        // println!("piece = {:?}", piece);
-        // println!("shape = {:?}", shape);
-        // println!("transform = {:?}", transform);
-        if piece.moving {
-            for event in cursor_moved_event.iter() {
-                // This also works
-                // let (x, y) = <(f32, f32)>::from(event.position);
-                let event_position = *event.position;
-                let x = event_position.x;
-                let y = event_position.y;
-                // This is probably useless for now
-                // shape.change_origin(x as i32, y as i32);
-                // TODO: Only the last square inserted for the piece is moving
-                *transform = Transform::from_translation(Vec3::new(x, y, 1.0));
+    for shape in shapes.iter() {
+        if cursor.is_pressed {
+            let first_entity = shape.entities.first().unwrap();
+            let first_transform = (*positions.get_mut(*first_entity).unwrap().1);
+            (*positions.get_mut(*first_entity).unwrap().1) = Transform::from_xyz(
+                cursor.current_pos.x,
+                cursor.current_pos.y,
+                1.0,
+            );
+            let delta_x = - first_transform.translation.x + cursor.current_pos.x;
+            let delta_y = - first_transform.translation.y + cursor.current_pos.y;
+
+            for entity in shape.entities.iter().skip(1) {
+                let new_transform = (*positions.get_mut(*entity).unwrap().1);
+                (*positions.get_mut(*entity).unwrap().1) = Transform::from_xyz(
+                    new_transform.translation.x + delta_x,
+                    new_transform.translation.y + delta_y,
+                    1.0,
+                );
             }
         }
     }
@@ -100,6 +106,8 @@ fn spawn_piece(
 
     let materials = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
     ShapeBuilder::new_rectangle_piece(commands, materials, 200, 200);
+    // TODO see if we can put it in the new_rectangle_piece.
+    commands.with(piece);
 }
 
 #[cfg(test)]

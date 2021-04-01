@@ -8,9 +8,7 @@ pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
     fn build(&self, app: &mut AppBuilder) {
-        app
-            .add_startup_system(spawn_board.system())
-            .add_system(test_query.system());
+        app.add_startup_system(spawn_board.system());
     }
 }
 
@@ -34,18 +32,4 @@ fn spawn_board(
     let board = Board {};
 
     commands.with(board);
-}
-
-// TODO: Remove this, this is used for test only
-fn test_query(
-    query: Query<&Shape>,
-    positions: Query<&Position>
-) {
-    for shape in query.iter() {
-        let res = shape.entities
-            .iter()
-            .map(|e| *positions.get(*e).unwrap())
-            .collect::<Vec<Position>>();
-        println!("{:?}", res);
-    }
 }
