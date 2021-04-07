@@ -8,9 +8,8 @@ authors = [
 edition = "2018"
 
 [dependencies]
-#rstest = "0.7.0"
 
 [dependencies.bevy]
 git = "https://github.com/bevyengine/bevy"
-rev = "bc4fe9b186db3f32eef38fc4241289df480fa949"
+rev = "97d8e4e1793ede3df8c77ed44736e800b38ff7a4"
 features = ["render"]

@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use crate::shape::{Shape, ShapeBuilder};
-use crate::position::Position;
+use crate::piece_builder::PieceBuilder;
 
 // Plugins
 pub struct BoardPlugin;
@@ -14,22 +13,20 @@ impl Plugin for BoardPlugin {
 
 // Components
 
-// Cela va représenter un board
+// This represent a board. For now the size is fixed
 // * * * *
 // * * * *
 // * * * *
-struct Board;
+pub struct Board {
+    pub entities: Vec<Entity>
+}
 
 // Systems
 fn spawn_board(
     mut materials: ResMut<Assets<ColorMaterial>>,
-    commands: &mut Commands,
+    commands: Commands,
 ) {
     let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
 
-    ShapeBuilder::new_board(commands, material, 300, 250, 5, 3);
-
-    let board = Board {};
-
-    commands.with(board);
+    PieceBuilder::new_board(commands, material, 300, 250, 5, 3);
 }

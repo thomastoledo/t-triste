@@ -3,9 +3,10 @@ use std::f32::consts::PI;
 
 use bevy::prelude::*;
 
+use crate::board::Board;
 use crate::cursor::Cursor;
+use crate::piece_builder::PieceBuilder;
 use crate::position::Position;
-use crate::shape::{Shape, ShapeBuilder};
 
 // Plugins
 pub struct PiecePlugin;
@@ -20,14 +21,19 @@ impl Plugin for PiecePlugin {
 }
 
 // Components
-#[derive(Default, Debug)]
-struct Piece {
-    rotation: f32,
-    moving: bool,
+pub struct Moving;
+
+#[derive(Default, Clone, PartialEq, Debug)]
+pub struct Piece {
+    pub entities: Vec<Entity>,
+    pub rotation: f32,
+    pub moving: bool,
 }
 
 impl Piece {
     // Rotate a piece by 90° in radians
+    // TODO: This does not work anymore.
+    //  We need an algorithm that does the rotation (change origin of each square)
     fn rotate_piece(&mut self) {
         let next_rad = self.rotation + FRAC_PI_2;
         if next_rad == (2.0 * PI) {
@@ -39,49 +45,49 @@ impl Piece {
 }
 
 // Systems
-// This system prints messages when you press or release the left mouse button:
 fn mouse_click_system(
+    mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    mut query: Query<(&mut Piece, &mut Transform)>,
+    pieces: Query<Entity, (With<Piece>, Without<Board>)>,
 ) {
     if mouse_button_input.just_pressed(MouseButton::Left) {
-        for (mut piece, _) in query.iter_mut() {
-            piece.moving = true
+        for piece in pieces.iter() {
+            commands.entity(piece).insert(Moving);
         }
     }
     if mouse_button_input.just_released(MouseButton::Left) {
-        for (mut piece, _) in query.iter_mut() {
-            piece.moving = false
+        for piece in pieces.iter() {
+            commands.entity(piece).remove::<Moving>();
         }
     }
     if mouse_button_input.just_pressed(MouseButton::Right) {
-        for (mut piece, mut transform) in query.iter_mut() {
-            piece.rotate_piece();
-            transform.rotation = Quat::from_rotation_z(piece.rotation);
-        }
+        // TODO: See doc around rotation part
+        // for (mut piece, mut transform) in pieces.iter_mut() {
+        //     piece.rotate_piece();
+        //     transform.rotation = Quat::from_rotation_z(piece.rotation);
+        // }
     }
 }
 
 fn mouse_move_system(
     cursor: Res<Cursor>,
-    // See if we attach a Moving component in the piece for the query to avoid double loop
-    shapes: Query<&Shape, With<Piece>>,
+    pieces: Query<&Piece, With<Moving>>,
     mut positions: Query<(&mut Position, &mut Transform)>,
 ) {
-    for shape in shapes.iter() {
+    for piece in pieces.iter() {
         if cursor.is_pressed {
-            let first_entity = shape.entities.first().unwrap();
-            let first_transform = (*positions.get_mut(*first_entity).unwrap().1);
+            let first_entity = piece.entities.first().unwrap();
+            let first_transform = *positions.get_mut(*first_entity).unwrap().1;
             (*positions.get_mut(*first_entity).unwrap().1) = Transform::from_xyz(
                 cursor.current_pos.x,
                 cursor.current_pos.y,
                 1.0,
             );
-            let delta_x = - first_transform.translation.x + cursor.current_pos.x;
-            let delta_y = - first_transform.translation.y + cursor.current_pos.y;
+            let delta_x = -first_transform.translation.x + cursor.current_pos.x;
+            let delta_y = -first_transform.translation.y + cursor.current_pos.y;
 
-            for entity in shape.entities.iter().skip(1) {
-                let new_transform = (*positions.get_mut(*entity).unwrap().1);
+            for entity in piece.entities.iter().skip(1) {
+                let new_transform = *positions.get_mut(*entity).unwrap().1;
                 (*positions.get_mut(*entity).unwrap().1) = Transform::from_xyz(
                     new_transform.translation.x + delta_x,
                     new_transform.translation.y + delta_y,
@@ -94,20 +100,10 @@ fn mouse_move_system(
 
 fn spawn_piece(
     mut materials: ResMut<Assets<ColorMaterial>>,
-    commands: &mut Commands,
+    commands: Commands,
 ) {
-    // TODO: Use a position struct
-    // let position = Position()
-
-    let piece = Piece {
-        moving: false,
-        rotation: 0.,
-    };
-
     let materials = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-    ShapeBuilder::new_rectangle_piece(commands, materials, 200, 200);
-    // TODO see if we can put it in the new_rectangle_piece.
-    commands.with(piece);
+    PieceBuilder::new_rectangle_piece(commands, materials, 200, 200);
 }
 
 #[cfg(test)]

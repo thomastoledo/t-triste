@@ -5,9 +5,7 @@
 * Initializer sur les tests
 
 ## Plan
-* Déplacement si clic sur l'élément (pas n'importe où)
 * Affichage de multiples pièces
+* Déplacement si clic sur l'élément (pas n'importe où)
 
 ## Réalisations
-* Déplacement d'une pièce avec la nouvelle structure
-* Resource de gestion du curseur

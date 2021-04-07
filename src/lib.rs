@@ -4,7 +4,7 @@ use bevy::render::camera::WindowOrigin;
 mod piece;
 mod board;
 mod position;
-mod shape;
+mod piece_builder;
 mod cursor;
 
 // Plugin
@@ -30,8 +30,8 @@ impl Plugin for GamePlugin {
 }
 
 // System
-fn setup_camera(commands: &mut Commands) {
-    commands.spawn({
+fn setup_camera(mut commands: Commands) {
+    commands.spawn_bundle({
         let mut camera = OrthographicCameraBundle::new_2d();
         camera.orthographic_projection.window_origin = WindowOrigin::BottomLeft;
         camera
