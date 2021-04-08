@@ -1,4 +1,5 @@
 # Stream 7
+[L'enregistrement du live](https://www.youtube.com/watch?v=hYtIbICJtJ4&list=PLyEcLxim6vkJLZYz7liB58HppFR1ASUmf&index=6)
 
 ## InterStream
 * Fixer les tests sur les shapes

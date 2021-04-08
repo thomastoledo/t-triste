@@ -7,76 +7,158 @@ use crate::position::Position;
 pub const SQUARE_WIDTH: i32 = 50;
 
 pub struct PieceBuilder {
-    pub positions: Vec<Position>
+    pub positions: Vec<Vec3>,
 }
 
 impl PieceBuilder {
     /// * * *
     /// * * *
     /// * * *
-    pub fn new_board(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32, nb_cols: i32, nb_rows: i32) {
+    pub fn new_board(
+        commands: Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+        nb_cols: i32,
+        nb_rows: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
         for i in 0..nb_rows {
-            builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y + (i * SQUARE_WIDTH), nb_cols));
-        };
+            builder
+                .positions
+                .append(&mut PieceBuilder::new_horizontal_rectangle(
+                    start_x,
+                    start_y + (i * SQUARE_WIDTH),
+                    nb_cols,
+                ));
+        }
         builder.build_board(commands, material);
     }
 
     /// *
     /// *
     /// *
-    pub fn new_rectangle_piece(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32) {
+    pub fn new_rectangle_piece(
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
         for i in 0..3 {
-            builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y + (i * SQUARE_WIDTH), 1));
-        };
+            builder
+                .positions
+                .append(&mut PieceBuilder::new_horizontal_rectangle(
+                    start_x,
+                    start_y + (i * SQUARE_WIDTH),
+                    1,
+                ));
+        }
         builder.build_piece(commands, material);
     }
 
     /// *
     /// *
     /// * *
-    pub fn new_l_piece(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32) {
+    pub fn new_l_piece(
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
         for i in 0..3 {
-            builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y + (i * SQUARE_WIDTH), 1));
-        };
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x + SQUARE_WIDTH, start_y, 1));
+            builder
+                .positions
+                .append(&mut PieceBuilder::new_horizontal_rectangle(
+                    start_x,
+                    start_y + (i * SQUARE_WIDTH),
+                    1,
+                ));
+        }
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x + SQUARE_WIDTH,
+                start_y,
+                1,
+            ));
         builder.build_piece(commands, material);
     }
 
     /// * *
     ///   * *
-    pub fn new_z_piece(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32) {
+    pub fn new_z_piece(
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
 
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y + SQUARE_WIDTH, 2));
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x + SQUARE_WIDTH, start_y, 2));
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x,
+                start_y + SQUARE_WIDTH,
+                2,
+            ));
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x + SQUARE_WIDTH,
+                start_y,
+                2,
+            ));
 
         builder.build_piece(commands, material);
     }
 
     /// *
     /// * *
-    pub fn new_corner_piece(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32) {
+    pub fn new_corner_piece(
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
 
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y, 2));
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y + SQUARE_WIDTH, 1));
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x, start_y, 2,
+            ));
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x,
+                start_y + SQUARE_WIDTH,
+                1,
+            ));
 
         builder.build_piece(commands, material);
     }
 
     /// *
-    pub fn new_dot_square_piece(commands: Commands, material: Handle<ColorMaterial>, start_x: i32, start_y: i32) {
+    pub fn new_dot_square_piece(
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+        start_x: i32,
+        start_y: i32,
+    ) {
         let mut builder = Self { positions: vec![] };
 
-        builder.positions.append(&mut PieceBuilder::new_horizontal_rectangle(start_x, start_y, 1));
+        builder
+            .positions
+            .append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x, start_y, 1,
+            ));
         builder.build_piece(commands, material);
     }
 
-    fn build_piece(mut self, mut commands: Commands, material: Handle<ColorMaterial>) {
-        let entities = self.build_entities(&mut commands, material);
+    fn build_piece(mut self, commands: &mut Commands, material: Handle<ColorMaterial>) {
+        let entities = self.build_entities(commands, material);
         let piece = Piece {
             entities,
             rotation: 0_f32,
@@ -91,28 +173,34 @@ impl PieceBuilder {
         commands.spawn().insert(board);
     }
 
-    fn build_entities(&mut self, commands: &mut Commands, material: Handle<ColorMaterial>) -> Vec<Entity> {
-        self.positions.iter_mut().map(|position| {
-            commands.spawn_bundle(
-                SpriteBundle {
-                    material: material.clone(),
-                    sprite: Sprite::new(Vec2::new((SQUARE_WIDTH - 1) as f32, (SQUARE_WIDTH - 1) as f32)),
-                    transform: Transform::from_translation(position.to_vec()),
-                    ..Default::default()
-                }
-            )
-                .insert(*position)
-                .id()
-        }).collect()
+    fn build_entities(
+        &mut self,
+        commands: &mut Commands,
+        material: Handle<ColorMaterial>,
+    ) -> Vec<Entity> {
+        self.positions
+            .iter_mut()
+            .map(|position| {
+                commands
+                    .spawn_bundle(SpriteBundle {
+                        material: material.clone(),
+                        sprite: Sprite::new(Vec2::new(
+                            (SQUARE_WIDTH - 1) as f32,
+                            (SQUARE_WIDTH - 1) as f32,
+                        )),
+                        transform: Transform::from_translation(*position),
+                        ..Default::default()
+                    })
+                    .insert(Position)
+                    .id()
+            })
+            .collect()
     }
 
-    fn new_horizontal_rectangle(start_x: i32, start_y: i32, length: i32) -> Vec<Position> {
+    fn new_horizontal_rectangle(start_x: i32, start_y: i32, length: i32) -> Vec<Vec3> {
         let mut squares = vec![];
         for i in 0..length {
-            squares.push(Position {
-                x: start_x + (i * SQUARE_WIDTH),
-                y: start_y,
-            });
+            squares.push(Vec3::new((start_x + i * SQUARE_WIDTH) as f32, start_y as f32, 1.))
         }
         squares
     }
@@ -140,8 +228,19 @@ mod tests {
         command_queue.apply(&mut world);
 
         // Then
-        let results = world.query::<&Position>().iter(&world).collect::<Vec<_>>();
-        assert_eq!(results, vec![&Position { x: 0, y: 0 }, &Position { x: 0, y: SQUARE_WIDTH }]);
+        let results = world
+            .query_filtered::<&Transform, With<Position>>()
+            .iter(&world)
+            .map(|t| t.translation)
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            results,
+            vec![
+                Vec3::new(0., 0., 1.),
+                Vec3::new(0., SQUARE_WIDTH as f32, 1.)
+            ]
+        );
     }
 
     #[test]
@@ -161,14 +260,18 @@ mod tests {
 
         // Then
         let results = world
-            .query::<&Position>()
+            .query_filtered::<&Transform, With<Position>>()
             .iter(&world)
+            .map(|t| t.translation)
             .collect::<Vec<_>>();
-        assert_eq!(results, vec![
-            &Position { x: 0, y: 0 },
-            &Position { x: 0, y: SQUARE_WIDTH },
-            &Position { x: 0, y: 2 * SQUARE_WIDTH }
-        ]);
+        assert_eq!(
+            results,
+            vec![
+                Vec3::new(0., 0., 1.),
+                Vec3::new(0., SQUARE_WIDTH as f32, 1.),
+                Vec3::new(0., 2. * SQUARE_WIDTH as f32, 1.),
+            ]
+        );
     }
 
     #[test]
@@ -188,15 +291,20 @@ mod tests {
 
         // Then
         let results = world
-            .query::<&Position>()
+            .query_filtered::<&Transform, With<Position>>()
             .iter(&world)
+            .map(|t| t.translation)
             .collect::<Vec<_>>();
-        assert_eq!(results, vec![
-            &Position { x: 0, y: 0 },
-            &Position { x: 0, y: SQUARE_WIDTH },
-            &Position { x: 0, y: 2 * SQUARE_WIDTH },
-            &Position { x: SQUARE_WIDTH, y: 0 }
-        ]);
+
+        assert_eq!(
+            results,
+            vec![
+                Vec3::new(0., 0., 1.),
+                Vec3::new(0., SQUARE_WIDTH as f32, 1.),
+                Vec3::new(0., 2. * (SQUARE_WIDTH as f32), 1.),
+                Vec3::new(SQUARE_WIDTH as f32, 0., 1.),
+            ]
+        );
     }
 
     #[test]
@@ -215,15 +323,20 @@ mod tests {
 
         // Then
         let results = world
-            .query::<&Position>()
+            .query_filtered::<&Transform, With<Position>>()
             .iter(&world)
+            .map(|t| t.translation)
             .collect::<Vec<_>>();
-        assert_eq!(results, vec![
-            &Position { x: 0, y: SQUARE_WIDTH },
-            &Position { x: SQUARE_WIDTH, y: SQUARE_WIDTH },
-            &Position { x: SQUARE_WIDTH, y: 0 },
-            &Position { x: 2 * SQUARE_WIDTH, y: 0 }
-        ]);
+
+        assert_eq!(
+            results,
+            vec![
+                Vec3::new(0.0, SQUARE_WIDTH as f32, 1.0),
+                Vec3::new(SQUARE_WIDTH as f32, SQUARE_WIDTH as f32, 1.),
+                Vec3::new(SQUARE_WIDTH as f32, 0., 1.),
+                Vec3::new(2. * SQUARE_WIDTH as f32, 0., 1.)
+            ]
+        );
     }
 
     #[test]
@@ -242,14 +355,18 @@ mod tests {
 
         // Then
         let results = world
-            .query::<&Position>()
+            .query_filtered::<&Transform, With<Position>>()
             .iter(&world)
+            .map(|t| t.translation)
             .collect::<Vec<_>>();
-        assert_eq!(results, vec![
-            &Position { x: 0, y: 0 },
-            &Position { x: SQUARE_WIDTH, y: 0 },
-            &Position { x: 0, y: SQUARE_WIDTH }
-        ]);
+        assert_eq!(
+            results,
+            vec![
+                Vec3::new(0., 0., 1.),
+                Vec3::new(SQUARE_WIDTH as f32, 0., 1.),
+                Vec3::new(0., SQUARE_WIDTH as f32, 1.),
+            ]
+        );
     }
 
     #[test]
@@ -267,9 +384,10 @@ mod tests {
 
         // Then
         let results = world
-            .query::<&Position>()
+            .query_filtered::<&Transform, With<Position>>()
             .iter(&world)
+            .map(|t| t.translation)
             .collect::<Vec<_>>();
-        assert_eq!(results, vec![&Position { x: 0, y: 0 }]);
+        assert_eq!(results, vec![Vec3::new(0., 0., 1.),]);
     }
 }
