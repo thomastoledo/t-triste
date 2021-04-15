@@ -30,6 +30,7 @@ impl PieceBuilder {
                     start_x,
                     start_y + (i * SQUARE_WIDTH),
                     nb_cols,
+                    0.,
                 ));
         }
         builder.build_board(commands, material);
@@ -52,6 +53,7 @@ impl PieceBuilder {
                     start_x,
                     start_y + (i * SQUARE_WIDTH),
                     1,
+                    1.,
                 ));
         }
         builder.build_piece(commands, material);
@@ -74,6 +76,7 @@ impl PieceBuilder {
                     start_x,
                     start_y + (i * SQUARE_WIDTH),
                     1,
+                    1.,
                 ));
         }
         builder
@@ -82,6 +85,7 @@ impl PieceBuilder {
                 start_x + SQUARE_WIDTH,
                 start_y,
                 1,
+                1.,
             ));
         builder.build_piece(commands, material);
     }
@@ -102,6 +106,7 @@ impl PieceBuilder {
                 start_x,
                 start_y + SQUARE_WIDTH,
                 2,
+                1.0,
             ));
         builder
             .positions
@@ -109,6 +114,7 @@ impl PieceBuilder {
                 start_x + SQUARE_WIDTH,
                 start_y,
                 2,
+                1.0,
             ));
 
         builder.build_piece(commands, material);
@@ -127,7 +133,7 @@ impl PieceBuilder {
         builder
             .positions
             .append(&mut PieceBuilder::new_horizontal_rectangle(
-                start_x, start_y, 2,
+                start_x, start_y, 2, 1.,
             ));
         builder
             .positions
@@ -135,6 +141,7 @@ impl PieceBuilder {
                 start_x,
                 start_y + SQUARE_WIDTH,
                 1,
+                1.0,
             ));
 
         builder.build_piece(commands, material);
@@ -152,7 +159,7 @@ impl PieceBuilder {
         builder
             .positions
             .append(&mut PieceBuilder::new_horizontal_rectangle(
-                start_x, start_y, 1,
+                start_x, start_y, 1, 1.0,
             ));
         builder.build_piece(commands, material);
     }
@@ -162,7 +169,6 @@ impl PieceBuilder {
         let piece = Piece {
             entities,
             rotation: 0_f32,
-            moving: false,
         };
         commands.spawn().insert(piece);
     }
@@ -197,10 +203,19 @@ impl PieceBuilder {
             .collect()
     }
 
-    fn new_horizontal_rectangle(start_x: i32, start_y: i32, length: i32) -> Vec<Vec3> {
+    fn new_horizontal_rectangle(
+        start_x: i32,
+        start_y: i32,
+        length: i32,
+        z_index: f32,
+    ) -> Vec<Vec3> {
         let mut squares = vec![];
         for i in 0..length {
-            squares.push(Vec3::new((start_x + i * SQUARE_WIDTH) as f32, start_y as f32, 1.))
+            squares.push(Vec3::new(
+                (start_x + i * SQUARE_WIDTH) as f32,
+                start_y as f32,
+                z_index,
+            ))
         }
         squares
     }
@@ -237,8 +252,8 @@ mod tests {
         assert_eq!(
             results,
             vec![
-                Vec3::new(0., 0., 1.),
-                Vec3::new(0., SQUARE_WIDTH as f32, 1.)
+                Vec3::new(0., 0., 0.),
+                Vec3::new(0., SQUARE_WIDTH as f32, 0.)
             ]
         );
     }
@@ -248,14 +263,14 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // *
         // *
         // *
-        PieceBuilder::new_rectangle_piece(commands, materials, 0, 0);
+        PieceBuilder::new_rectangle_piece(&mut commands, materials, 0, 0);
         command_queue.apply(&mut world);
 
         // Then
@@ -279,14 +294,14 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // *
         // *
         // * *
-        PieceBuilder::new_l_piece(commands, materials, 0, 0);
+        PieceBuilder::new_l_piece(&mut commands, materials, 0, 0);
         command_queue.apply(&mut world);
 
         // Then
@@ -312,13 +327,13 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // * *
         //   * *
-        PieceBuilder::new_z_piece(commands, materials, 0, 0);
+        PieceBuilder::new_z_piece(&mut commands, materials, 0, 0);
         command_queue.apply(&mut world);
 
         // Then
@@ -344,13 +359,13 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // *
         // * *
-        PieceBuilder::new_corner_piece(commands, materials, 0, 0);
+        PieceBuilder::new_corner_piece(&mut commands, materials, 0, 0);
         command_queue.apply(&mut world);
 
         // Then
@@ -374,12 +389,12 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // *
-        PieceBuilder::new_dot_square_piece(commands, materials, 0, 0);
+        PieceBuilder::new_dot_square_piece(&mut commands, materials, 0, 0);
         command_queue.apply(&mut world);
 
         // Then

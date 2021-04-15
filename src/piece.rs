@@ -14,8 +14,9 @@ pub struct PiecePlugin;
 impl Plugin for PiecePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(spawn_piece.system())
+            .add_system(mouse_move_system.system())
             .add_system(mouse_click_system.system())
-            .add_system(mouse_move_system.system());
+            .add_system(incrust_in_board.system());
     }
 }
 
@@ -26,7 +27,6 @@ pub struct Moving;
 pub struct Piece {
     pub entities: Vec<Entity>,
     pub rotation: f32,
-    pub moving: bool,
 }
 
 impl Piece {
@@ -70,11 +70,6 @@ fn mouse_click_system(
             }
         }
     }
-    if mouse_button_input.just_released(MouseButton::Left) {
-        for (_, entity) in piece_query.iter() {
-            commands.entity(entity).remove::<Moving>();
-        }
-    }
     if mouse_button_input.just_pressed(MouseButton::Right) {
         // TODO: See doc around rotation part
         // for (mut piece, mut transform) in pieces.iter_mut() {
@@ -113,11 +108,75 @@ fn mouse_move_system(
 fn spawn_piece(mut materials: ResMut<Assets<ColorMaterial>>, mut commands: Commands) {
     let rectangle_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
     PieceBuilder::new_rectangle_piece(&mut commands, rectangle_material, 200, 200);
-
     let l_material = materials.add(Color::rgb(1.56, 0.12, 0.03).into());
     PieceBuilder::new_l_piece(&mut commands, l_material, 600, 50);
     let z_material = materials.add(Color::rgb(0.46, 0.98, 1.13).into());
     PieceBuilder::new_z_piece(&mut commands, z_material, 100, 350);
+    let corner_material = materials.add(Color::rgb(0.83, 1.02, 0.18).into());
+    PieceBuilder::new_corner_piece(&mut commands, corner_material, 50, 350);
+    let square_material = materials.add(Color::rgb(0.01, 1.0, 0.42536772).into());
+    PieceBuilder::new_dot_square_piece(&mut commands, square_material, 400, 100);
+}
+
+fn incrust_in_board(
+    mut commands: Commands,
+    mouse_button_input: Res<Input<MouseButton>>,
+    board: Query<&Board>,
+    pieces: Query<(&Piece, Entity), With<Moving>>,
+    mut positions: Query<&mut Transform, With<Position>>,
+) {
+    if !mouse_button_input.just_released(MouseButton::Left) {
+        return;
+    }
+
+    for board in board.iter() {
+        let mut board_transforms: Vec<Vec3> = vec![];
+        let mut min_x_board = f32::MAX;
+        let mut max_x_board = 0_f32;
+        let mut min_y_board = f32::MAX;
+        let mut max_y_board = 0_f32;
+        for position_entity in board.entities.iter() {
+            let t = positions
+                .get_mut(*position_entity)
+                .expect("Piece without pos should not exist")
+                .translation;
+            if t.x < min_x_board {
+                min_x_board = t.x;
+            };
+            if t.x > max_x_board {
+                max_x_board = t.x;
+            };
+            if t.y < min_y_board {
+                min_y_board = t.y;
+            };
+            if t.y > max_y_board {
+                max_y_board = t.y;
+            };
+            board_transforms.push(t);
+        }
+        // TODO: algo to move each transform in the board.
+        let mut piece_transforms: Vec<Vec3> = vec![];
+        for (piece, entity) in pieces.iter() {
+            commands.entity(entity).remove::<Moving>();
+            for position_entity in piece.entities.iter() {
+                let t = positions
+                    .get_mut(*position_entity)
+                    .expect("Piece without pos should not exist");
+                piece_transforms.push(t.translation);
+            }
+
+            let in_board = piece_transforms.iter().map(|t| t).all(|t| {
+                min_x_board <= t.x && t.x <= max_x_board && min_y_board <= t.y && t.y <= max_y_board
+            });
+            println!("{:?}", board_transforms);
+            println!(
+                "Min x={:?} y={:?}, Max x={:?} y={:?}",
+                min_x_board, min_y_board, max_x_board, max_y_board
+            );
+            println!("{:?}", piece_transforms);
+            println!("{:?}", in_board);
+        }
+    }
 }
 
 #[cfg(test)]
