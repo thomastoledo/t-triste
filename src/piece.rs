@@ -14,8 +14,8 @@ pub struct PiecePlugin;
 impl Plugin for PiecePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(spawn_piece.system())
-            .add_system(mouse_move_system.system())
-            .add_system(mouse_click_system.system())
+            .add_system(click_piece.system())
+            .add_system(move_piece.system())
             .add_system(incrust_in_board.system());
     }
 }
@@ -42,16 +42,30 @@ impl Piece {
         }
     }
 
+    /// Piece translation are in fact the middle of the piece
     fn is_even_odd(piece_pos: Vec3, current_pos: Vec2) -> bool {
-        piece_pos.x <= current_pos.x
-            && current_pos.x <= piece_pos.x + (SQUARE_WIDTH as f32)
-            && piece_pos.y <= current_pos.y
-            && current_pos.y <= piece_pos.y + (SQUARE_WIDTH as f32)
+        piece_pos.x - (SQUARE_WIDTH / 2) as f32 <= current_pos.x
+            && current_pos.x <= piece_pos.x + (SQUARE_WIDTH / 2) as f32
+            && piece_pos.y - (SQUARE_WIDTH / 2) as f32 <= current_pos.y
+            && current_pos.y <= piece_pos.y + (SQUARE_WIDTH / 2) as f32
     }
 }
 
 // Systems
-fn mouse_click_system(
+fn spawn_piece(mut materials: ResMut<Assets<ColorMaterial>>, mut commands: Commands) {
+    let rectangle_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
+    PieceBuilder::new_rectangle_piece(&mut commands, rectangle_material, 200, 200);
+    let l_material = materials.add(Color::rgb(1.56, 0.12, 0.03).into());
+    PieceBuilder::new_l_piece(&mut commands, l_material, 600, 50);
+    let z_material = materials.add(Color::rgb(0.46, 0.98, 1.13).into());
+    PieceBuilder::new_z_piece(&mut commands, z_material, 100, 350);
+    let corner_material = materials.add(Color::rgb(0.83, 1.02, 0.18).into());
+    PieceBuilder::new_corner_piece(&mut commands, corner_material, 50, 350);
+    let square_material = materials.add(Color::rgb(0.01, 1.0, 0.42536772).into());
+    PieceBuilder::new_dot_square_piece(&mut commands, square_material, 400, 100);
+}
+
+fn click_piece(
     mut commands: Commands,
     cursor: Res<Cursor>,
     mouse_button_input: Res<Input<MouseButton>>,
@@ -79,13 +93,13 @@ fn mouse_click_system(
     }
 }
 
-fn mouse_move_system(
+fn move_piece(
     cursor: Res<Cursor>,
     pieces: Query<&Piece, With<Moving>>,
     mut positions: Query<(&mut Position, &mut Transform)>,
 ) {
-    for piece in pieces.iter() {
-        if cursor.is_pressed {
+    if cursor.is_pressed {
+        for piece in pieces.iter() {
             let first_entity = piece.entities.first().unwrap();
             let first_transform = *positions.get_mut(*first_entity).unwrap().1;
             (*positions.get_mut(*first_entity).unwrap().1) =
@@ -103,19 +117,6 @@ fn mouse_move_system(
             }
         }
     }
-}
-
-fn spawn_piece(mut materials: ResMut<Assets<ColorMaterial>>, mut commands: Commands) {
-    let rectangle_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-    PieceBuilder::new_rectangle_piece(&mut commands, rectangle_material, 200, 200);
-    let l_material = materials.add(Color::rgb(1.56, 0.12, 0.03).into());
-    PieceBuilder::new_l_piece(&mut commands, l_material, 600, 50);
-    let z_material = materials.add(Color::rgb(0.46, 0.98, 1.13).into());
-    PieceBuilder::new_z_piece(&mut commands, z_material, 100, 350);
-    let corner_material = materials.add(Color::rgb(0.83, 1.02, 0.18).into());
-    PieceBuilder::new_corner_piece(&mut commands, corner_material, 50, 350);
-    let square_material = materials.add(Color::rgb(0.01, 1.0, 0.42536772).into());
-    PieceBuilder::new_dot_square_piece(&mut commands, square_material, 400, 100);
 }
 
 fn incrust_in_board(
@@ -161,12 +162,19 @@ fn incrust_in_board(
             for position_entity in piece.entities.iter() {
                 let t = positions
                     .get_mut(*position_entity)
-                    .expect("Piece without pos should not exist");
+                    .expect("Piece without position should not exist");
                 piece_transforms.push(t.translation);
             }
 
+            // The issue here is that the code expect pixel perfect placement.
+            // Add a 5% acceptance factor.
+            let adjusted_min_x = min_x_board * 0.95;
+            let adjusted_min_y = min_y_board * 0.95;
+            let adjusted_max_x = max_x_board * 1.05;
+            let adjusted_max_y = max_y_board * 1.05;
+
             let in_board = piece_transforms.iter().map(|t| t).all(|t| {
-                min_x_board <= t.x && t.x <= max_x_board && min_y_board <= t.y && t.y <= max_y_board
+                adjusted_min_x <= t.x && t.x <= adjusted_max_x && adjusted_min_y <= t.y && t.y <= adjusted_max_y
             });
             println!("{:?}", board_transforms);
             println!(
@@ -230,6 +238,19 @@ mod tests {
         // Given
         let piece_pos = Vec3::new(1.0, 1.0, 1.0);
         let current_pos = Vec2::new(5., 10.);
+
+        // When
+        let result = Piece::is_even_odd(piece_pos, current_pos);
+
+        // Then
+        assert_eq!(result, true);
+    }
+
+    #[test]
+    fn test_even_odd_ok_left_side_in_area() {
+        // Given
+        let piece_pos = Vec3::new(10.0, 10.0, 1.0);
+        let current_pos = Vec2::new(5., 5.);
 
         // When
         let result = Piece::is_even_odd(piece_pos, current_pos);
