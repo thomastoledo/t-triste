@@ -122,7 +122,7 @@ fn move_piece(
 fn incrust_in_board(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    board: Query<&Board>,
+    boards: Query<&Board>,
     pieces: Query<(&Piece, Entity), With<Moving>>,
     mut positions: Query<&mut Transform, With<Position>>,
 ) {
@@ -130,60 +130,39 @@ fn incrust_in_board(
         return;
     }
 
-    for board in board.iter() {
-        let mut board_transforms: Vec<Vec3> = vec![];
-        let mut min_x_board = f32::MAX;
-        let mut max_x_board = 0_f32;
-        let mut min_y_board = f32::MAX;
-        let mut max_y_board = 0_f32;
-        for position_entity in board.entities.iter() {
+    // We know for sure that we only have one board
+    let board = boards.iter().next().unwrap();
+    // TODO: algo to move each transform in the board.
+    let mut piece_transforms: Vec<Vec3> = vec![];
+    for (piece, entity) in pieces.iter() {
+        commands.entity(entity).remove::<Moving>();
+        for position_entity in piece.entities.iter() {
             let t = positions
                 .get_mut(*position_entity)
-                .expect("Piece without pos should not exist")
-                .translation;
-            if t.x < min_x_board {
-                min_x_board = t.x;
-            };
-            if t.x > max_x_board {
-                max_x_board = t.x;
-            };
-            if t.y < min_y_board {
-                min_y_board = t.y;
-            };
-            if t.y > max_y_board {
-                max_y_board = t.y;
-            };
-            board_transforms.push(t);
+                .expect("Piece without position should not exist");
+            piece_transforms.push(t.translation);
         }
-        // TODO: algo to move each transform in the board.
-        let mut piece_transforms: Vec<Vec3> = vec![];
-        for (piece, entity) in pieces.iter() {
-            commands.entity(entity).remove::<Moving>();
-            for position_entity in piece.entities.iter() {
-                let t = positions
-                    .get_mut(*position_entity)
-                    .expect("Piece without position should not exist");
-                piece_transforms.push(t.translation);
-            }
 
-            // The issue here is that the code expect pixel perfect placement.
-            // Add a 5% acceptance factor.
-            let adjusted_min_x = min_x_board * 0.95;
-            let adjusted_min_y = min_y_board * 0.95;
-            let adjusted_max_x = max_x_board * 1.05;
-            let adjusted_max_y = max_y_board * 1.05;
+        // The issue here is that the code expect pixel perfect placement.
+        // Add a 5% acceptance factor.
+        // We could put this in a method to clean up the code ?
+        let adjusted_min_x = board.min_x * 0.95;
+        let adjusted_min_y = board.min_y * 0.95;
+        let adjusted_max_x = board.max_x * 1.05;
+        let adjusted_max_y = board.max_y * 1.05;
 
-            let in_board = piece_transforms.iter().map(|t| t).all(|t| {
-                adjusted_min_x <= t.x && t.x <= adjusted_max_x && adjusted_min_y <= t.y && t.y <= adjusted_max_y
-            });
-            println!("{:?}", board_transforms);
-            println!(
-                "Min x={:?} y={:?}, Max x={:?} y={:?}",
-                min_x_board, min_y_board, max_x_board, max_y_board
-            );
-            println!("{:?}", piece_transforms);
-            println!("{:?}", in_board);
-        }
+        let in_board = piece_transforms.iter().map(|t| t).all(|t| {
+            adjusted_min_x <= t.x
+                && t.x <= adjusted_max_x
+                && adjusted_min_y <= t.y
+                && t.y <= adjusted_max_y
+        });
+        println!(
+            "Min x={:?} y={:?}, Max x={:?} y={:?}",
+            board.min_x, board.min_y, board.max_x, board.max_y
+        );
+        println!("{:?}", piece_transforms);
+        println!("{:?}", in_board);
     }
 }
 

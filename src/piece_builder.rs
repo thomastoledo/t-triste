@@ -15,7 +15,7 @@ impl PieceBuilder {
     /// * * *
     /// * * *
     pub fn new_board(
-        commands: Commands,
+        commands: &mut Commands,
         material: Handle<ColorMaterial>,
         start_x: i32,
         start_y: i32,
@@ -23,17 +23,36 @@ impl PieceBuilder {
         nb_rows: i32,
     ) {
         let mut builder = Self { positions: vec![] };
+        let min_x: f32 = start_x as f32;
+        let min_y: f32 = start_y as f32;
+        let mut max_x: f32 = 0_f32;
+        let mut max_y: f32 = 0_f32;
         for i in 0..nb_rows {
-            builder
-                .positions
-                .append(&mut PieceBuilder::new_horizontal_rectangle(
-                    start_x,
-                    start_y + (i * SQUARE_WIDTH),
-                    nb_cols,
-                    0.,
-                ));
+            let piece_builder = &mut PieceBuilder::new_horizontal_rectangle(
+                start_x,
+                start_y + (i * SQUARE_WIDTH),
+                nb_cols,
+                0.,
+            );
+            for vec in piece_builder.iter() {
+                if max_x < vec.x {
+                    max_x = vec.x;
+                }
+                if max_y < vec.y {
+                    max_y = vec.y;
+                }
+            }
+            builder.positions.append(piece_builder);
         }
-        builder.build_board(commands, material);
+        let entities = builder.build_entities(commands, material);
+        let board = Board {
+            entities,
+            min_x,
+            max_x,
+            min_y,
+            max_y,
+        };
+        commands.spawn().insert(board);
     }
 
     /// *
@@ -173,12 +192,6 @@ impl PieceBuilder {
         commands.spawn().insert(piece);
     }
 
-    fn build_board(mut self, mut commands: Commands, material: Handle<ColorMaterial>) {
-        let entities = self.build_entities(&mut commands, material);
-        let board = Board { entities };
-        commands.spawn().insert(board);
-    }
-
     fn build_entities(
         &mut self,
         commands: &mut Commands,
@@ -233,13 +246,13 @@ mod tests {
         // Given
         let mut world = World::default();
         let mut command_queue = CommandQueue::default();
-        let commands = Commands::new(&mut command_queue, &world);
+        let mut commands = Commands::new(&mut command_queue, &world);
         let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
 
         // When
         // *
         // *
-        PieceBuilder::new_board(commands, materials, 0, 0, 1, 2);
+        PieceBuilder::new_board(&mut commands, materials, 0, 0, 1, 2);
         command_queue.apply(&mut world);
 
         // Then
@@ -256,6 +269,32 @@ mod tests {
                 Vec3::new(0., SQUARE_WIDTH as f32, 0.)
             ]
         );
+    }
+
+    #[test]
+    fn test_min_max_position_build_board() {
+        // Given
+        let mut world = World::default();
+        let mut command_queue = CommandQueue::default();
+        let mut commands = Commands::new(&mut command_queue, &world);
+        let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
+
+        let nb_col = 3;
+        let nb_row = 4;
+        let start_x = 100;
+        let start_y = 50;
+
+        // When
+        PieceBuilder::new_board(&mut commands, materials, start_x, start_y, nb_col, nb_row);
+        command_queue.apply(&mut world);
+
+        // Then
+        let board = world.query::<&Board>().iter(&world).next().unwrap();
+
+        assert_eq!(board.min_x, start_x as f32);
+        assert_eq!(board.max_x, (start_x + SQUARE_WIDTH * (nb_col - 1)) as f32);
+        assert_eq!(board.min_y, start_y as f32);
+        assert_eq!(board.max_y, (start_y + SQUARE_WIDTH * (nb_row - 1)) as f32);
     }
 
     #[test]

@@ -18,15 +18,19 @@ impl Plugin for BoardPlugin {
 // * * * *
 // * * * *
 pub struct Board {
-    pub entities: Vec<Entity>
+    pub entities: Vec<Entity>,
+    pub min_x: f32,
+    pub min_y: f32,
+    pub max_x: f32,
+    pub max_y: f32,
 }
 
 // Systems
 fn spawn_board(
     mut materials: ResMut<Assets<ColorMaterial>>,
-    commands: Commands,
+    mut commands: Commands,
 ) {
     let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
 
-    PieceBuilder::new_board(commands, material, 300, 250, 5, 3);
+    PieceBuilder::new_board(&mut commands, material, 300, 250, 5, 3);
 }
