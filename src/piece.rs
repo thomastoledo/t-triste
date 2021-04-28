@@ -143,7 +143,7 @@ fn incrust_in_board(
             piece_transforms.push(t.translation);
         }
 
-        // The issue here is that the code expect pixel perfect placement.
+        // The issue was that the code expected pixel perfect placement.
         // Add a 5% acceptance factor.
         // We could put this in a method to clean up the code ?
         let adjusted_min_x = board.min_x * 0.95;
@@ -163,6 +163,33 @@ fn incrust_in_board(
         );
         println!("{:?}", piece_transforms);
         println!("{:?}", in_board);
+
+        if in_board {
+            // TODO: we are once again iterating over the transform. This is not efficient.
+            for position_entity in piece.entities.iter() {
+                let mut t = positions
+                    .get_mut(*position_entity)
+                    .expect("Piece without position should not exist");
+                // Here we remove the modulo of a SQUARE height to map to a board position.
+                let current_x_mod = (t.translation.x as i32) % SQUARE_WIDTH;
+                let current_y_mod = (t.translation.y as i32) % SQUARE_WIDTH;
+                let half_width = SQUARE_WIDTH / 2;
+                if current_x_mod > half_width {
+                    (*t).translation.x =
+                        (t.translation.x as i32 - current_x_mod + SQUARE_WIDTH) as f32;
+                } else {
+                    (*t).translation.x = (t.translation.x as i32 - current_x_mod) as f32;
+                }
+
+                if current_y_mod > half_width {
+                    (*t).translation.y =
+                        (t.translation.y as i32 - current_y_mod + SQUARE_WIDTH) as f32;
+                } else {
+                    (*t).translation.y = (t.translation.y as i32 - current_y_mod) as f32;
+                }
+                // TODO: Save the board squares that are filled.
+            }
+        }
     }
 }
 
