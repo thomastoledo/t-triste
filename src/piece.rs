@@ -4,7 +4,7 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 
 use crate::cursor::Cursor;
-use crate::piece_builder::PieceBuilder;
+use crate::piece_builder::PieceBuilder  ;
 use crate::position::Position;
 use crate::{board::Board, piece_builder::SQUARE_WIDTH};
 
@@ -157,12 +157,6 @@ fn incrust_in_board(
                 && adjusted_min_y <= t.y
                 && t.y <= adjusted_max_y
         });
-        println!(
-            "Min x={:?} y={:?}, Max x={:?} y={:?}",
-            board.min_x, board.min_y, board.max_x, board.max_y
-        );
-        println!("{:?}", piece_transforms);
-        println!("{:?}", in_board);
 
         if in_board {
             // TODO: we are once again iterating over the transform. This is not efficient.

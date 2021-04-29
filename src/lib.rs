@@ -6,6 +6,7 @@ mod board;
 mod position;
 mod piece_builder;
 mod cursor;
+mod rectangle;
 
 // Plugin
 pub struct GamePlugin;
