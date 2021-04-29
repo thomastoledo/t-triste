@@ -8,3 +8,6 @@
 * Gestion du placement dans le board
 
 ## Réalisations
+
+## Interesting resources
+* https://stackoverflow.com/questions/65396065/what-is-an-acceptable-approach-to-dragging-sprites-with-bevy-0-4

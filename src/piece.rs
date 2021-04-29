@@ -14,8 +14,8 @@ pub struct PiecePlugin;
 impl Plugin for PiecePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(spawn_piece.system())
-            .add_system(mouse_move_system.system())
-            .add_system(mouse_click_system.system())
+            .add_system(click_piece.system())
+            .add_system(move_piece.system())
             .add_system(incrust_in_board.system());
     }
 }
@@ -42,16 +42,30 @@ impl Piece {
         }
     }
 
+    /// Piece translation are in fact the middle of the piece
     fn is_even_odd(piece_pos: Vec3, current_pos: Vec2) -> bool {
-        piece_pos.x <= current_pos.x
-            && current_pos.x <= piece_pos.x + (SQUARE_WIDTH as f32)
-            && piece_pos.y <= current_pos.y
-            && current_pos.y <= piece_pos.y + (SQUARE_WIDTH as f32)
+        piece_pos.x - (SQUARE_WIDTH / 2) as f32 <= current_pos.x
+            && current_pos.x <= piece_pos.x + (SQUARE_WIDTH / 2) as f32
+            && piece_pos.y - (SQUARE_WIDTH / 2) as f32 <= current_pos.y
+            && current_pos.y <= piece_pos.y + (SQUARE_WIDTH / 2) as f32
     }
 }
 
 // Systems
-fn mouse_click_system(
+fn spawn_piece(mut materials: ResMut<Assets<ColorMaterial>>, mut commands: Commands) {
+    let rectangle_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
+    PieceBuilder::new_rectangle_piece(&mut commands, rectangle_material, 200, 200);
+    let l_material = materials.add(Color::rgb(1.56, 0.12, 0.03).into());
+    PieceBuilder::new_l_piece(&mut commands, l_material, 600, 50);
+    let z_material = materials.add(Color::rgb(0.46, 0.98, 1.13).into());
+    PieceBuilder::new_z_piece(&mut commands, z_material, 100, 350);
+    let corner_material = materials.add(Color::rgb(0.83, 1.02, 0.18).into());
+    PieceBuilder::new_corner_piece(&mut commands, corner_material, 50, 350);
+    let square_material = materials.add(Color::rgb(0.01, 1.0, 0.42536772).into());
+    PieceBuilder::new_dot_square_piece(&mut commands, square_material, 400, 100);
+}
+
+fn click_piece(
     mut commands: Commands,
     cursor: Res<Cursor>,
     mouse_button_input: Res<Input<MouseButton>>,
@@ -79,13 +93,13 @@ fn mouse_click_system(
     }
 }
 
-fn mouse_move_system(
+fn move_piece(
     cursor: Res<Cursor>,
     pieces: Query<&Piece, With<Moving>>,
     mut positions: Query<(&mut Position, &mut Transform)>,
 ) {
-    for piece in pieces.iter() {
-        if cursor.is_pressed {
+    if cursor.is_pressed {
+        for piece in pieces.iter() {
             let first_entity = piece.entities.first().unwrap();
             let first_transform = *positions.get_mut(*first_entity).unwrap().1;
             (*positions.get_mut(*first_entity).unwrap().1) =
@@ -105,23 +119,10 @@ fn mouse_move_system(
     }
 }
 
-fn spawn_piece(mut materials: ResMut<Assets<ColorMaterial>>, mut commands: Commands) {
-    let rectangle_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-    PieceBuilder::new_rectangle_piece(&mut commands, rectangle_material, 200, 200);
-    let l_material = materials.add(Color::rgb(1.56, 0.12, 0.03).into());
-    PieceBuilder::new_l_piece(&mut commands, l_material, 600, 50);
-    let z_material = materials.add(Color::rgb(0.46, 0.98, 1.13).into());
-    PieceBuilder::new_z_piece(&mut commands, z_material, 100, 350);
-    let corner_material = materials.add(Color::rgb(0.83, 1.02, 0.18).into());
-    PieceBuilder::new_corner_piece(&mut commands, corner_material, 50, 350);
-    let square_material = materials.add(Color::rgb(0.01, 1.0, 0.42536772).into());
-    PieceBuilder::new_dot_square_piece(&mut commands, square_material, 400, 100);
-}
-
 fn incrust_in_board(
     mut commands: Commands,
     mouse_button_input: Res<Input<MouseButton>>,
-    board: Query<&Board>,
+    boards: Query<&Board>,
     pieces: Query<(&Piece, Entity), With<Moving>>,
     mut positions: Query<&mut Transform, With<Position>>,
 ) {
@@ -129,52 +130,65 @@ fn incrust_in_board(
         return;
     }
 
-    for board in board.iter() {
-        let mut board_transforms: Vec<Vec3> = vec![];
-        let mut min_x_board = f32::MAX;
-        let mut max_x_board = 0_f32;
-        let mut min_y_board = f32::MAX;
-        let mut max_y_board = 0_f32;
-        for position_entity in board.entities.iter() {
+    // We know for sure that we only have one board
+    let board = boards.iter().next().unwrap();
+    // TODO: algo to move each transform in the board.
+    let mut piece_transforms: Vec<Vec3> = vec![];
+    for (piece, entity) in pieces.iter() {
+        commands.entity(entity).remove::<Moving>();
+        for position_entity in piece.entities.iter() {
             let t = positions
                 .get_mut(*position_entity)
-                .expect("Piece without pos should not exist")
-                .translation;
-            if t.x < min_x_board {
-                min_x_board = t.x;
-            };
-            if t.x > max_x_board {
-                max_x_board = t.x;
-            };
-            if t.y < min_y_board {
-                min_y_board = t.y;
-            };
-            if t.y > max_y_board {
-                max_y_board = t.y;
-            };
-            board_transforms.push(t);
+                .expect("Piece without position should not exist");
+            piece_transforms.push(t.translation);
         }
-        // TODO: algo to move each transform in the board.
-        let mut piece_transforms: Vec<Vec3> = vec![];
-        for (piece, entity) in pieces.iter() {
-            commands.entity(entity).remove::<Moving>();
-            for position_entity in piece.entities.iter() {
-                let t = positions
-                    .get_mut(*position_entity)
-                    .expect("Piece without pos should not exist");
-                piece_transforms.push(t.translation);
-            }
 
-            let in_board = piece_transforms.iter().map(|t| t).all(|t| {
-                min_x_board <= t.x && t.x <= max_x_board && min_y_board <= t.y && t.y <= max_y_board
-            });
-            println!("{:?}", board_transforms);
-            println!(
-                "Min x={:?} y={:?}, Max x={:?} y={:?}",
-                min_x_board, min_y_board, max_x_board, max_y_board
-            );
-            println!("{:?}", piece_transforms);
-            println!("{:?}", in_board);
+        // The issue was that the code expected pixel perfect placement.
+        // Add a 5% acceptance factor.
+        // We could put this in a method to clean up the code ?
+        let adjusted_min_x = board.min_x * 0.95;
+        let adjusted_min_y = board.min_y * 0.95;
+        let adjusted_max_x = board.max_x * 1.05;
+        let adjusted_max_y = board.max_y * 1.05;
+
+        let in_board = piece_transforms.iter().map(|t| t).all(|t| {
+            adjusted_min_x <= t.x
+                && t.x <= adjusted_max_x
+                && adjusted_min_y <= t.y
+                && t.y <= adjusted_max_y
+        });
+        println!(
+            "Min x={:?} y={:?}, Max x={:?} y={:?}",
+            board.min_x, board.min_y, board.max_x, board.max_y
+        );
+        println!("{:?}", piece_transforms);
+        println!("{:?}", in_board);
+
+        if in_board {
+            // TODO: we are once again iterating over the transform. This is not efficient.
+            for position_entity in piece.entities.iter() {
+                let mut t = positions
+                    .get_mut(*position_entity)
+                    .expect("Piece without position should not exist");
+                // Here we remove the modulo of a SQUARE height to map to a board position.
+                let current_x_mod = (t.translation.x as i32) % SQUARE_WIDTH;
+                let current_y_mod = (t.translation.y as i32) % SQUARE_WIDTH;
+                let half_width = SQUARE_WIDTH / 2;
+                if current_x_mod > half_width {
+                    (*t).translation.x =
+                        (t.translation.x as i32 - current_x_mod + SQUARE_WIDTH) as f32;
+                } else {
+                    (*t).translation.x = (t.translation.x as i32 - current_x_mod) as f32;
+                }
+
+                if current_y_mod > half_width {
+                    (*t).translation.y =
+                        (t.translation.y as i32 - current_y_mod + SQUARE_WIDTH) as f32;
+                } else {
+                    (*t).translation.y = (t.translation.y as i32 - current_y_mod) as f32;
+                }
+                // TODO: Save the board squares that are filled.
+            }
         }
     }
 }
@@ -230,6 +244,19 @@ mod tests {
         // Given
         let piece_pos = Vec3::new(1.0, 1.0, 1.0);
         let current_pos = Vec2::new(5., 10.);
+
+        // When
+        let result = Piece::is_even_odd(piece_pos, current_pos);
+
+        // Then
+        assert_eq!(result, true);
+    }
+
+    #[test]
+    fn test_even_odd_ok_left_side_in_area() {
+        // Given
+        let piece_pos = Vec3::new(10.0, 10.0, 1.0);
+        let current_pos = Vec2::new(5., 5.);
 
         // When
         let result = Piece::is_even_odd(piece_pos, current_pos);

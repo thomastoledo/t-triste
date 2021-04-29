@@ -10,7 +10,7 @@ impl Plugin for CursorPlugin {
                 last_click_pos: Vec2::default(),
                 is_pressed: false
             })
-            .add_system(cursor_moved.system());
+            .add_system_to_stage(CoreStage::PreUpdate, cursor_state.system());
     }
 }
 
@@ -20,7 +20,7 @@ pub struct Cursor {
     pub is_pressed: bool
 }
 
-fn cursor_moved(
+fn cursor_state(
     mut cursor_moved_event: EventReader<CursorMoved>,
     mouse_button_input: Res<Input<MouseButton>>,
     mut cursor: ResMut<Cursor>,
