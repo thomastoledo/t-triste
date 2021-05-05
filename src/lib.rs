@@ -26,7 +26,9 @@ impl Plugin for GamePlugin {
             .add_startup_system(setup_camera.system())
             .add_plugin(cursor::CursorPlugin)
             .add_plugin(board::BoardPlugin)
-            .add_plugin(piece::PiecePlugin);
+            .add_plugin(piece::PiecePlugin)
+            .add_plugin(rectangle::RectPlugin)
+            ;
     }
 }
 
