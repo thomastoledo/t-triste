@@ -1,5 +1,8 @@
-use bevy::math::{vec2, vec3, Vec2};
-use bevy::prelude::*;
+use std::{array::IntoIter, collections::HashMap};
+
+use std::iter::FromIterator;
+
+use bevy::{math::{vec2, vec3, Vec2}, prelude::*};
 
 use crate::{cursor::Cursor, piece_builder::SQUARE_WIDTH};
 
@@ -19,19 +22,6 @@ impl Rect {
         if positions.is_empty() {
             panic!("WTF, insert positions please")
         }
-        // ÇA MARCHE !
-        // T'es le meilleur, mec
-        // C'est incroyable
-        // une telle abnégation
-        // fais moi l'amour
-        // marie-moi 6 AOUT 2022 J'AI UNE DATE , ARLLELSEZE RLVEEEEZZZGOOOO
-        // je veux un enfant de toi QUAND TU VEUX GROS
-        // mais sans avoir un enfant de toi
-        // ok 
-        // lourd
-        // putain ça part en craquage
-        // mdr 
-        // Je tente un truc dans la query, de mettre le trait
 
         let rec = Rect { positions };
         if !rec.is_horizontal() && !rec.is_vertical() {
@@ -90,6 +80,32 @@ impl Piece2 for Rect {
 // Plugin
 pub struct RectPlugin;
 
+// Suis la Themu
+struct GameState {
+    rects: Vec<Rect>,
+}
+#[derive(Debug, Hash, PartialEq, Eq)]
+enum PieceEnum {
+    Rect,
+}
+
+impl GameState {
+    fn all_positions(&mut self) -> HashMap<PieceEnum, Vec<Vec2>> {
+        HashMap::<_, _>::from_iter(IntoIter::new([(
+            PieceEnum::Rect,
+            self.rects.iter_mut().flat_map(|f| f.positions).collect::<_>(),
+        )]))
+    }
+
+    fn all_pieces(&mut self) -> Vec<&mut impl Piece2> {
+        let mut pieces = vec![];
+        for rect in &mut self.rects {
+            pieces.push(rect);
+        }
+        pieces
+    }
+}
+
 impl Plugin for RectPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(spawn_piece.system())
@@ -117,10 +133,11 @@ fn clear_rect(mut commands: Commands, query: Query<Entity, With<PositionMarker>>
 fn draw_piece(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    query: Query<&Rect>,
+    mut query: ResMut<GameState>,
+    // query: Query<&Rect>,
 ) {
     let rect_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-    for rec in query.iter().flat_map(|r| &r.positions) {
+    for rec in query.all_positions().values().into_iter().flat_map(|it| it) {
         commands
             .spawn_bundle(SpriteBundle {
                 material: rect_material.clone(),
@@ -135,17 +152,17 @@ fn draw_piece(
     }
 }
 
-fn rotate(mouse_button_input: Res<Input<MouseButton>>, mut query: Query<&mut Rect>) {
+fn rotate(mouse_button_input: Res<Input<MouseButton>>, mut query: ResMut<GameState>) {
     if mouse_button_input.just_pressed(MouseButton::Right) {
-        for mut rect in query.iter_mut() {
-            rect.rotate()
+        for rect in query.all_pieces() {
+            rect.rotate();
         }
-    }
+    };
 }
 
-fn move_piece(cursor: Res<Cursor>, mut query: Query<&mut Rect>) {
+fn move_piece(cursor: Res<Cursor>, mut query: ResMut<GameState>) {
     if cursor.is_pressed {
-        for mut rect in query.iter_mut() {
+        for rect in query.all_pieces().iter_mut() {
             rect.move_it(&cursor);
         }
     }

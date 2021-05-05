@@ -106,10 +106,6 @@ fn move_piece(
                 Transform::from_xyz(cursor.current_pos.x, cursor.current_pos.y, 1.0);
             let delta_x = -first_transform.translation.x + cursor.current_pos.x;
             let delta_y = -first_transform.translation.y + cursor.current_pos.y;
-// La le soucis c'est que le rectangle s'enfuit vers la droite hyper vite
-// En fait on avait déjà eu ce soucis je crois. Oui c'était quand on faisait la rotation ou quand on cliquait juste dessus
-
-// Une sombre histoire de coordonnées. +1
             for entity in piece.entities.iter().skip(1) {
                 let new_transform = *positions.get_mut(*entity).unwrap().1;
                 (*positions.get_mut(*entity).unwrap().1) = Transform::from_xyz(
