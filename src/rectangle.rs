@@ -1,14 +1,21 @@
-use bevy::math::Vec2;
+use bevy::math::{vec2, vec3, Vec2};
+use bevy::prelude::*;
 
-use crate::piece_builder::SQUARE_WIDTH;
+use crate::{cursor::Cursor, piece_builder::SQUARE_WIDTH};
 
-trait Rotate {
+trait Piece2 {
+    fn positions(&self) -> Vec<Vec2>;
     fn rotate(&mut self);
+    fn move_it(&mut self, cursor: &Res<Cursor>);
 }
+
+struct GameState(Vec<Box<dyn Piece2>>);
 
 struct Rect {
     positions: Vec<Vec2>,
 }
+
+struct PositionMarker;
 
 impl Rect {
     pub fn new(positions: Vec<Vec2>) -> Self {
@@ -33,13 +40,13 @@ impl Rect {
     }
 }
 
-impl Rotate for Rect {
+impl Piece2 for Rect {
     fn rotate(&mut self) {
         let position_length = self.positions.len();
         let middle_index = position_length / 2;
         let central_piece_position = self.positions[middle_index];
 
-        let compute_delta = | idx |  (idx as f32 - middle_index as f32) * SQUARE_WIDTH as f32;
+        let compute_delta = |idx| (idx as f32 - middle_index as f32) * SQUARE_WIDTH as f32;
 
         if self.is_vertical() {
             for (idefix, pos) in self.positions.iter_mut().enumerate() {
@@ -51,6 +58,93 @@ impl Rotate for Rect {
                 pos.y = central_piece_position.y - compute_delta(idefix);
                 pos.x = central_piece_position.x;
             }
+        }
+    }
+
+    fn move_it(&mut self, cursor: &Res<Cursor>) {
+        let first_pos = self.positions.first_mut().unwrap();
+
+        let delta_x = -first_pos.x + cursor.current_pos.x;
+        let delta_y = -first_pos.y + cursor.current_pos.y;
+
+        first_pos.x = cursor.current_pos.x;
+        first_pos.y = cursor.current_pos.y;
+
+        for pos in self.positions.iter_mut().skip(1) {
+            pos.x = pos.x + delta_x;
+            pos.y = pos.y + delta_y;
+        }
+    }
+
+    fn positions(&self) -> Vec<Vec2> {
+        self.positions.clone()
+    }
+}
+
+// Plugin
+pub struct RectPlugin;
+
+impl Plugin for RectPlugin {
+    fn build(&self, app: &mut AppBuilder) {
+        app
+            .insert_non_send_resource(GameState(vec![Box::new(Rect {
+                positions: vec![vec2(100., 100.), vec2(150., 100.), vec2(200., 100.)],
+            })]))
+            // .add_startup_system(spawn_piece.system())
+            .add_system_to_stage(CoreStage::PreUpdate, clear_rect.system())
+            .add_system(rotate.system())
+            .add_system(move_piece.system())
+            .add_system(draw_piece.system());
+    }
+}
+
+// System
+fn spawn_piece(mut commands: Commands) {
+    let rectangle = Rect {
+        positions: vec![vec2(100., 100.), vec2(150., 100.), vec2(200., 100.)],
+    };
+    commands.spawn().insert(rectangle);
+}
+
+fn clear_rect(mut commands: Commands, query: Query<Entity, With<PositionMarker>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+fn draw_piece(
+    mut commands: Commands,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut query: NonSendMut<GameState>,
+) {
+    let rect_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
+    for rec in query.0.iter_mut().flat_map(|r| r.positions()) {
+        commands
+            .spawn_bundle(SpriteBundle {
+                material: rect_material.clone(),
+                sprite: Sprite::new(Vec2::new(
+                    (SQUARE_WIDTH - 1) as f32,
+                    (SQUARE_WIDTH - 1) as f32,
+                )),
+                transform: Transform::from_translation(vec3(rec.x, rec.y, 0.)),
+                ..Default::default()
+            })
+            .insert(PositionMarker);
+    }
+}
+
+fn rotate(mouse_button_input: Res<Input<MouseButton>>, mut query: NonSendMut<GameState>,) {
+    if mouse_button_input.just_pressed(MouseButton::Right) {
+        for rect in query.0.iter_mut() {
+            rect.rotate()
+        }
+    }
+}
+
+fn move_piece(cursor: Res<Cursor>, mut query: NonSendMut<GameState>,) {
+    if cursor.is_pressed {
+        for rect in query.0.iter_mut() {
+            rect.move_it(&cursor);
         }
     }
 }
@@ -105,7 +199,7 @@ mod tests {
             vec![vec2(250., 100.), vec2(200., 100.), vec2(150., 100.)]
         );
     }
-    
+
     #[test]
     fn test_rotate_360() {
         // Given
