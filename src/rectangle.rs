@@ -1,33 +1,33 @@
-use bevy::math::{vec2, vec3, Vec2};
 use bevy::prelude::*;
 
-use crate::{cursor::Cursor, piece_builder::SQUARE_WIDTH};
+use crate::{
+    cursor::Cursor,
+    piece::Piece,
+    piece_builder::{PieceBuilder, SQUARE_WIDTH},
+};
 
-trait Piece2 {
-    fn positions(&self) -> Vec<Vec2>;
-    fn rotate(&mut self);
-    fn move_it(&mut self, cursor: &Res<Cursor>);
+pub struct Rectangle {
+    positions: Vec<Vec3>,
+    color: Color,
+    moving: bool,
 }
 
-struct GameState(Vec<Box<dyn Piece2>>);
-
-struct Rect {
-    positions: Vec<Vec2>,
-}
-
-struct PositionMarker;
-
-impl Rect {
-    pub fn new(positions: Vec<Vec2>) -> Self {
-        if positions.is_empty() {
-            panic!("WTF, insert positions please")
+impl Rectangle {
+    pub fn new(start_x: i32, start_y: i32) -> Self {
+        let mut positions = vec![];
+        for i in 0..3 {
+            positions.append(&mut PieceBuilder::new_horizontal_rectangle(
+                start_x,
+                start_y + (i * SQUARE_WIDTH),
+                1,
+                1.,
+            ));
         }
-
-        let rec = Rect { positions };
-        if !rec.is_horizontal() && !rec.is_vertical() {
-            panic!("WTF, this is not a rectangle");
+        Rectangle {
+            positions,
+            color: Color::rgb(0.68, 0.1, 1.03),
+            moving: false,
         }
-        rec
     }
 
     fn is_horizontal(&self) -> bool {
@@ -40,7 +40,7 @@ impl Rect {
     }
 }
 
-impl Piece2 for Rect {
+impl Piece for Rectangle {
     fn rotate(&mut self) {
         let position_length = self.positions.len();
         let middle_index = position_length / 2;
@@ -76,89 +76,65 @@ impl Piece2 for Rect {
         }
     }
 
-    fn positions(&self) -> Vec<Vec2> {
+    fn positions(&self) -> Vec<Vec3> {
         self.positions.clone()
     }
-}
 
-// Plugin
-pub struct RectPlugin;
-
-impl Plugin for RectPlugin {
-    fn build(&self, app: &mut AppBuilder) {
-        app
-            .insert_non_send_resource(GameState(vec![Box::new(Rect {
-                positions: vec![vec2(100., 100.), vec2(150., 100.), vec2(200., 100.)],
-            })]))
-            // .add_startup_system(spawn_piece.system())
-            .add_system_to_stage(CoreStage::PreUpdate, clear_rect.system())
-            .add_system(rotate.system())
-            .add_system(move_piece.system())
-            .add_system(draw_piece.system());
+    fn color(&self) -> Color {
+        self.color.clone()
     }
-}
 
-// System
-fn spawn_piece(mut commands: Commands) {
-    let rectangle = Rect {
-        positions: vec![vec2(100., 100.), vec2(150., 100.), vec2(200., 100.)],
-    };
-    commands.spawn().insert(rectangle);
-}
-
-fn clear_rect(mut commands: Commands, query: Query<Entity, With<PositionMarker>>) {
-    for entity in query.iter() {
-        commands.entity(entity).despawn();
+    fn set_moving(&mut self, moving: bool) {
+        self.moving = moving;
     }
-}
 
-fn draw_piece(
-    mut commands: Commands,
-    mut materials: ResMut<Assets<ColorMaterial>>,
-    mut query: NonSendMut<GameState>,
-) {
-    let rect_material = materials.add(Color::rgb(0.68, 0.1, 1.03).into());
-    for rec in query.0.iter_mut().flat_map(|r| r.positions()) {
-        commands
-            .spawn_bundle(SpriteBundle {
-                material: rect_material.clone(),
-                sprite: Sprite::new(Vec2::new(
-                    (SQUARE_WIDTH - 1) as f32,
-                    (SQUARE_WIDTH - 1) as f32,
-                )),
-                transform: Transform::from_translation(vec3(rec.x, rec.y, 0.)),
-                ..Default::default()
-            })
-            .insert(PositionMarker);
-    }
-}
-
-fn rotate(mouse_button_input: Res<Input<MouseButton>>, mut query: NonSendMut<GameState>,) {
-    if mouse_button_input.just_pressed(MouseButton::Right) {
-        for rect in query.0.iter_mut() {
-            rect.rotate()
-        }
-    }
-}
-
-fn move_piece(cursor: Res<Cursor>, mut query: NonSendMut<GameState>,) {
-    if cursor.is_pressed {
-        for rect in query.0.iter_mut() {
-            rect.move_it(&cursor);
-        }
+    fn is_moving(&self) -> bool {
+        self.moving
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use bevy::math::vec2;
+    use bevy::math::vec3;
 
     use super::*;
 
     #[test]
+    fn test_build_rectangle_piece() {
+        // Given
+        assert_eq!(true, false, "LEHL");
+        // let mut world = World::default();
+        // let mut command_queue = CommandQueue::default();
+        // let mut commands = Commands::new(&mut command_queue, &world);
+        // let materials: Handle<ColorMaterial> = Handle::weak(HandleId::random::<ColorMaterial>());
+
+        // // When
+        // // *
+        // // *
+        // // *
+        // PieceBuilder::new_rectangle_piece(&mut commands, materials, 0, 0);
+        // command_queue.apply(&mut world);
+
+        // // Then
+        // let results = world
+        //     .query_filtered::<&Transform, With<Position>>()
+        //     .iter(&world)
+        //     .map(|t| t.translation)
+        //     .collect::<Vec<_>>();
+        // assert_eq!(
+        //     results,
+        //     vec![
+        //         Vec3::new(0., 0., 1.),
+        //         Vec3::new(0., SQUARE_WIDTH as f32, 1.),
+        //         Vec3::new(0., 2. * SQUARE_WIDTH as f32, 1.),
+        //     ]
+        // );
+    }
+
+    #[test]
     fn test_rotate_90() {
         // Given
-        let mut rectangle = Rect::new(vec![vec2(200., 50.), vec2(200., 100.), vec2(200., 150.)]);
+        let mut rectangle = Rectangle::new(200, 50);
 
         // When
         rectangle.rotate();
@@ -166,14 +142,23 @@ mod tests {
         // Then
         assert_eq!(
             rectangle.positions,
-            vec![vec2(250., 100.), vec2(200., 100.), vec2(150., 100.)]
+            vec![
+                vec3(250., 100., 1.),
+                vec3(200., 100., 1.),
+                vec3(150., 100., 1.)
+            ]
         );
     }
 
     #[test]
     fn test_rotate_180() {
         // Given
-        let mut rectangle = Rect::new(vec![vec2(250., 100.), vec2(200., 100.), vec2(150., 100.)]);
+        let mut rectangle = Rectangle::new(200, 50);
+        rectangle.positions = vec![
+            vec3(250., 100., 0.),
+            vec3(200., 100., 0.),
+            vec3(150., 100., 0.),
+        ];
 
         // When
         rectangle.rotate();
@@ -181,14 +166,23 @@ mod tests {
         // Then
         assert_eq!(
             rectangle.positions,
-            vec![vec2(200., 150.), vec2(200., 100.), vec2(200., 50.)]
+            vec![
+                vec3(200., 150., 0.),
+                vec3(200., 100., 0.),
+                vec3(200., 50., 0.)
+            ]
         );
     }
 
     #[test]
     fn test_rotate_270() {
         // Given
-        let mut rectangle = Rect::new(vec![vec2(200., 150.), vec2(200., 100.), vec2(200., 50.)]);
+        let mut rectangle = Rectangle::new(200, 50);
+        rectangle.positions = vec![
+            vec3(200., 150., 0.),
+            vec3(200., 100., 0.),
+            vec3(200., 50., 0.),
+        ];
 
         // When
         rectangle.rotate();
@@ -196,14 +190,23 @@ mod tests {
         // Then
         assert_eq!(
             rectangle.positions,
-            vec![vec2(250., 100.), vec2(200., 100.), vec2(150., 100.)]
+            vec![
+                vec3(250., 100., 0.),
+                vec3(200., 100., 0.),
+                vec3(150., 100., 0.)
+            ]
         );
     }
 
     #[test]
     fn test_rotate_360() {
         // Given
-        let mut rectangle = Rect::new(vec![vec2(150., 100.), vec2(200., 100.), vec2(250., 100.)]);
+        let mut rectangle = Rectangle::new(200, 50);
+        rectangle.positions = vec![
+            vec3(150., 100., 0.),
+            vec3(200., 100., 0.),
+            vec3(250., 100., 0.),
+        ];
 
         // When
         rectangle.rotate();
@@ -211,7 +214,11 @@ mod tests {
         // Then
         assert_eq!(
             rectangle.positions,
-            vec![vec2(200., 150.), vec2(200., 100.), vec2(200., 50.)]
+            vec![
+                vec3(200., 150., 0.),
+                vec3(200., 100., 0.),
+                vec3(200., 50., 0.)
+            ]
         );
     }
 }

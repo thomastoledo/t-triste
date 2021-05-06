@@ -24,7 +24,7 @@ pub struct Board {
     pub max_x: f32,
     pub max_y: f32,
 
-    // vec[bool[]]
+    // vec[bool[]] ?
 }
 
 // Systems
@@ -32,7 +32,7 @@ fn spawn_board(
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
 ) {
+    // TODO: Build the board differently
     let material = materials.add(Color::rgb(0.60, 0.40, 0.).into());
-
     PieceBuilder::new_board(&mut commands, material, 300, 250, 5, 3);
 }
