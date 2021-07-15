@@ -1,11 +1,9 @@
-use bevy::prelude::*;
-use bevy::render::camera::WindowOrigin;
-
-mod board;
 mod cursor;
 mod piece;
-mod piece_builder;
-mod rectangle;
+
+use bevy::prelude::*;
+use bevy::render::camera::WindowOrigin;
+use piece::board;
 
 // Plugin
 pub struct GamePlugin;

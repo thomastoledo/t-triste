@@ -1,10 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    cursor::Cursor,
-    piece::Piece,
-    piece_builder::{PieceBuilder, SQUARE_WIDTH},
-};
+use crate::{cursor::Cursor, piece::{Piece, piece_builder::{PieceBuilder, SQUARE_WIDTH}}};
 
 pub struct Rectangle {
     positions: Vec<Vec3>,
@@ -15,6 +11,7 @@ pub struct Rectangle {
 impl Rectangle {
     pub fn new(start_x: i32, start_y: i32) -> Self {
         let mut positions = vec![];
+        // TODO: Use horizontal rectangle from pieceBuilder ?
         for i in 0..3 {
             positions.append(&mut PieceBuilder::new_horizontal_rectangle(
                 start_x,
