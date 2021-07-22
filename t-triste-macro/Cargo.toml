@@ -1,0 +1,15 @@
+[package]
+name = "t-triste-macro"
+version = "0.1.0"
+authors = [
+    "ImFlog <garcia.florian.perso@gmail.com>",
+    "NugetChar <nugetchar@gmail.com>"
+]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = {version = "1.0.65"}
+quote = {version = "1.0"}

@@ -8,6 +8,8 @@ mod rectangle;
 mod square;
 mod z;
 
+extern crate t_triste_macro;
+
 use bevy::{math::vec3, prelude::*};
 
 use crate::{

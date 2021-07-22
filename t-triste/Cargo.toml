@@ -1,0 +1,19 @@
+[package]
+name = "t-triste"
+version = "0.1.0"
+authors = [
+    "ImFlog <garcia.florian.perso@gmail.com>",
+    "NugetChar <nugetchar@gmail.com>"
+]
+edition = "2018"
+
+[[bin]]
+name = "t-triste"
+
+[dependencies]
+t-triste-lib = { version = "*", path = "../t-triste-lib" }
+
+[dependencies.bevy]
+git = "https://github.com/bevyengine/bevy"
+rev = "97d8e4e1793ede3df8c77ed44736e800b38ff7a4"
+features = ["render"]

@@ -1,5 +1,7 @@
+extern crate t_triste_lib;
+use t_triste_lib::*;
+
 use bevy::prelude::*;
-use t_triste::*;
 
 // Start function
 fn main() {
@@ -7,5 +9,3 @@ fn main() {
         .add_plugin(GamePlugin)
         .run();
 }
-
-//  <3

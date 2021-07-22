@@ -1,7 +1,10 @@
 use bevy::prelude::*;
+use t_triste_macro::PieceBehavior;
 
-use crate::{cursor::Cursor, piece::{Piece, piece_builder::{PieceBuilder, SQUARE_WIDTH}}};
+use crate::piece::piece_builder::{PieceBuilder, SQUARE_WIDTH};
 
+
+#[derive(PieceBehavior)]
 pub struct Rectangle {
     positions: Vec<Vec3>,
     color: Color,
@@ -25,68 +28,6 @@ impl Rectangle {
             color: Color::rgb(0.68, 0.1, 1.03),
             moving: false,
         }
-    }
-
-    fn is_horizontal(&self) -> bool {
-        let first_y = self.positions.first().unwrap().y;
-        self.positions.iter().all(|pos| first_y == pos.y)
-    }
-    fn is_vertical(&self) -> bool {
-        let first_x = self.positions.first().unwrap().x;
-        self.positions.iter().all(|pos| first_x == pos.x)
-    }
-}
-
-impl Piece for Rectangle {
-    fn rotate(&mut self) {
-        let position_length = self.positions.len();
-        let middle_index = position_length / 2;
-        let central_piece_position = self.positions[middle_index];
-
-        let compute_delta = |idx| (idx as f32 - middle_index as f32) * SQUARE_WIDTH as f32;
-
-        if self.is_vertical() {
-            for (idefix, pos) in self.positions.iter_mut().enumerate() {
-                pos.x = central_piece_position.x - compute_delta(idefix);
-                pos.y = central_piece_position.y;
-            }
-        } else if self.is_horizontal() {
-            for (idefix, pos) in self.positions.iter_mut().enumerate() {
-                pos.y = central_piece_position.y - compute_delta(idefix);
-                pos.x = central_piece_position.x;
-            }
-        }
-    }
-
-    fn move_it(&mut self, cursor: &Res<Cursor>) {
-        let first_pos = self.positions.first_mut().unwrap();
-
-        let delta_x = -first_pos.x + cursor.current_pos.x;
-        let delta_y = -first_pos.y + cursor.current_pos.y;
-
-        first_pos.x = cursor.current_pos.x;
-        first_pos.y = cursor.current_pos.y;
-
-        for pos in self.positions.iter_mut().skip(1) {
-            pos.x = pos.x + delta_x;
-            pos.y = pos.y + delta_y;
-        }
-    }
-
-    fn positions(&self) -> Vec<Vec3> {
-        self.positions.clone()
-    }
-
-    fn color(&self) -> Color {
-        self.color.clone()
-    }
-
-    fn set_moving(&mut self, moving: bool) {
-        self.moving = moving;
-    }
-
-    fn is_moving(&self) -> bool {
-        self.moving
     }
 }
 
