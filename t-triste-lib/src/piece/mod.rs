@@ -17,11 +17,12 @@ use crate::{
     piece::{corner::Corner, l::L, rectangle::Rectangle, square::Square, z::Z},
 };
 use piece::{Piece, Position};
-use piece_builder::SQUARE_WIDTH;
+
+pub const SQUARE_WIDTH: i32 = 50;
 
 // Plugins
 pub struct PiecePlugin;
-struct GameState(Vec<Box<dyn Piece>>);
+pub struct GameState(pub Vec<Box<dyn Piece>>);
 
 impl Plugin for PiecePlugin {
     fn build(&self, app: &mut AppBuilder) {

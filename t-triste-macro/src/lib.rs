@@ -55,6 +55,26 @@ pub fn derive_behavior_fn(input: TokenStream) -> TokenStream {
                     pos.y = pos.y + delta_y;
                 }
             }
+
+            fn snap(&mut self) {
+                for position in self.positions.iter_mut() {
+                    // Here we remove the modulo of a SQUARE height to map to a board position.
+                    let current_x_mod = (position.x as i32) % crate::SQUARE_WIDTH;
+                    let current_y_mod = (position.y as i32) % crate::SQUARE_WIDTH;
+                    let half_width = crate::SQUARE_WIDTH / 2;
+                    if current_x_mod > half_width {
+                        position.x = (position.x as i32 - current_x_mod + crate::SQUARE_WIDTH) as f32;
+                    } else {
+                        position.x = (position.x as i32 - current_x_mod) as f32;
+                    }
+        
+                    if current_y_mod > half_width {
+                        position.y = (position.y as i32 - current_y_mod + crate::SQUARE_WIDTH) as f32;
+                    } else {
+                        position.y = (position.y as i32 - current_y_mod) as f32;
+                    }
+                }
+            }
         
             fn set_moving(&mut self, moving: bool) {
                 self.moving = moving;

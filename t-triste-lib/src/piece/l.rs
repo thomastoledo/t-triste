@@ -3,7 +3,7 @@ use std::vec;
 
 use t_triste_macro::PieceBehavior;
 
-use crate::piece::piece_builder::{PieceBuilder, SQUARE_WIDTH};
+use crate::piece::{SQUARE_WIDTH, piece_builder::{PieceBuilder}};
 
 #[derive(PieceBehavior)]
 pub struct L {

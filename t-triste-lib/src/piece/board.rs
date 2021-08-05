@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::piece::piece_builder::SQUARE_WIDTH;
+use crate::piece::SQUARE_WIDTH;
 
 use super::piece_builder::PieceBuilder;
 

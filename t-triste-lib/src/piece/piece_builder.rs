@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-pub const SQUARE_WIDTH: i32 = 50;
+use crate::piece::SQUARE_WIDTH;
 
 pub struct PieceBuilder {
     pub positions: Vec<Vec3>,

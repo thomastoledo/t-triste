@@ -17,4 +17,5 @@ Un puzzle game compétitif (BATTLE ROYALE ? NON). Pour lancer le jeu: `cargo run
 * [stream_10](readmes/stream_10.md)
 * [stream_11](readmes/stream_11.md)
 * [stream_12](readmes/stream_12.md)
-* => [stream_13](readmes/stream_13.md)
+* [stream_13](readmes/stream_13.md)
+* => [stream_14](readmes/stream_14.md)
